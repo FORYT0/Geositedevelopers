@@ -30,8 +30,8 @@ export function FooterSection() {
       <div className="relative overflow-hidden" style={{ minHeight: '60vh' }}>
         {/* Background image */}
         <img
-          src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80"
-          alt="Luxury interior"
+          src="/renders/Blue Spiral Hotel Ground full render.png"
+          alt="Geosite DEVELOPERS project"
           className="absolute inset-0 w-full h-full object-cover object-center"
           draggable={false}
         />

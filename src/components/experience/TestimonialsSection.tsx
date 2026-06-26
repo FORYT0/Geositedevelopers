@@ -40,7 +40,7 @@ const TESTIMONIALS = [
   },
 ];
 
-const BG_IMAGE = 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80';
+const BG_IMAGE = '/renders/Blue Spiral Hotel Entrance Final.png';
 
 export function TestimonialsSection() {
   const [active, setActive]     = useState(0);

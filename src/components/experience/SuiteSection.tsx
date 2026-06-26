@@ -356,7 +356,7 @@ export function SuiteSection() {
           }}
         >
           <img
-            src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1920&q=80"
+            src="/renders/Luxurious presidential suite Infinity feel 1.png"
             alt="Modern Living Space — Interior Design"
             className="w-full h-full object-cover object-center"
             draggable={false}
