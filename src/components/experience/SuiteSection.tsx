@@ -1,22 +1,10 @@
 'use client';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-interface HotspotData {
-  id: string;
-  x: number;
-  y: number;
-  label: string;
-  category: string;
-  description: string;
-  material: string;
-  origin: string;
-  icon: string; // key into HOTSPOT_ICONS
-}
-
-// Clean SVG icons — no emoji
+/* ─── SVG icons ──────────────────────────────────────────────────── */
 const HOTSPOT_ICONS: Record<string, React.ReactElement> = {
   sofa: (
-    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
+    <svg viewBox="0 0 22 22" fill="none" width="18" height="18" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="8" width="16" height="8" rx="1.5"/>
       <path d="M3 11.5 V9.5 Q3 7 1.5 7 V15"/>
       <path d="M19 11.5 V9.5 Q19 7 20.5 7 V15"/>
@@ -25,7 +13,7 @@ const HOTSPOT_ICONS: Record<string, React.ReactElement> = {
     </svg>
   ),
   lighting: (
-    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
+    <svg viewBox="0 0 22 22" fill="none" width="18" height="18" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
       <path d="M8.5 3.5 Q11 2 13.5 3.5 L12 10 H10 Z"/>
       <line x1="11" y1="10" x2="11" y2="17"/>
       <line x1="8" y1="17" x2="14" y2="17"/>
@@ -33,21 +21,21 @@ const HOTSPOT_ICONS: Record<string, React.ReactElement> = {
     </svg>
   ),
   'coffee-table': (
-    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
+    <svg viewBox="0 0 22 22" fill="none" width="18" height="18" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
       <rect x="2" y="8.5" width="18" height="4" rx="1"/>
       <line x1="5" y1="12.5" x2="5" y2="18"/>
       <line x1="17" y1="12.5" x2="17" y2="18"/>
     </svg>
   ),
   art: (
-    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
+    <svg viewBox="0 0 22 22" fill="none" width="18" height="18" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
       <rect x="2.5" y="3" width="17" height="15" rx="1"/>
       <rect x="5" y="5.5" width="12" height="9" rx="0.5" strokeOpacity="0.45"/>
       <path d="M5 11.5 L8 8.5 L10.5 11 L13.5 7.5 L17 11.5" strokeOpacity="0.7"/>
     </svg>
   ),
   plant: (
-    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
+    <svg viewBox="0 0 22 22" fill="none" width="18" height="18" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
       <line x1="11" y1="19" x2="11" y2="10"/>
       <path d="M11 15 Q8 12 5 13 Q6.5 8.5 11 11"/>
       <path d="M11 12.5 Q14 9.5 17 10.5 Q15.5 6 11 9.5"/>
@@ -55,7 +43,7 @@ const HOTSPOT_ICONS: Record<string, React.ReactElement> = {
     </svg>
   ),
   rug: (
-    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
+    <svg viewBox="0 0 22 22" fill="none" width="18" height="18" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
       <rect x="2" y="6" width="18" height="10" rx="1"/>
       <rect x="5" y="9" width="12" height="4" rx="0.5" strokeOpacity="0.45"/>
       <line x1="2" y1="9" x2="5" y2="9"/>
@@ -66,435 +54,371 @@ const HOTSPOT_ICONS: Record<string, React.ReactElement> = {
   ),
 };
 
-const HOTSPOTS: HotspotData[] = [
+/* ─── Data ───────────────────────────────────────────────────────── */
+const ELEMENTS = [
   {
     id: 'sofa',
-    x: 50,
-    y: 55,
+    icon: 'sofa',
     label: 'Modular Sectional',
     category: 'Furniture',
     description: 'Contemporary modular sofa with deep seating and premium velvet upholstery. Features customizable configuration and hidden storage compartments.',
     material: 'Premium Velvet · Solid Oak Frame · High-Density Foam',
-    origin: 'Design Studio, 2025',
-    icon: 'sofa',
   },
   {
     id: 'lighting',
-    x: 25,
-    y: 30,
+    icon: 'lighting',
     label: 'Arc Floor Lamp',
     category: 'Lighting',
-    description: 'Sleek arc floor lamp with marble base and brushed brass finish. Adjustable height and dimmable LED bulb provide warm ambient lighting.',
+    description: 'Sleek arc floor lamp with marble base and brushed brass finish. Adjustable height and dimmable LED provides warm ambient lighting.',
     material: 'Marble Base · Brushed Brass · LED Technology',
-    origin: 'Studio Collection, 2025',
-    icon: 'lighting',
   },
   {
     id: 'coffee-table',
-    x: 50,
-    y: 75,
-    label: 'Coffee Table',
-    category: 'Furniture',
-    description: 'Minimalist coffee table with tempered glass top and walnut wood legs. Features a lower shelf for magazines and decorative items.',
-    material: 'Tempered Glass · Walnut Wood · Metal Hardware',
-    origin: 'Craft Workshop, 2025',
     icon: 'coffee-table',
+    label: 'Bespoke Coffee Table',
+    category: 'Furniture',
+    description: 'Minimalist coffee table with tempered glass top and walnut legs. A lower shelf adds function without sacrificing form.',
+    material: 'Tempered Glass · Walnut Wood · Metal Hardware',
   },
   {
     id: 'art',
-    x: 75,
-    y: 35,
+    icon: 'art',
     label: 'Abstract Wall Art',
     category: 'Artwork',
-    description: 'Large-scale abstract painting with geometric forms and subtle texture. Hand-painted on canvas with acrylics.',
+    description: 'Large-scale abstract painting with geometric forms and subtle texture. Hand-painted on canvas with archival acrylics.',
     material: 'Acrylic on Canvas · Floating Wood Frame',
-    origin: 'Artist Studio, 2024',
-    icon: 'art',
   },
   {
     id: 'plant',
-    x: 15,
-    y: 65,
-    label: 'Statement Plant',
-    category: 'Decor',
-    description: 'Large fiddle leaf fig tree in ceramic planter. Brings life and natural beauty to indoor spaces.',
-    material: 'Live Plant · Handcrafted Ceramic Planter',
-    origin: 'Botanical Collection, 2025',
     icon: 'plant',
+    label: 'Statement Greenery',
+    category: 'Botanicals',
+    description: 'Large fiddle leaf fig in a handcrafted ceramic planter. Brings life and natural scale to the interior composition.',
+    material: 'Live Plant · Handcrafted Ceramic Planter',
   },
   {
     id: 'rug',
-    x: 50,
-    y: 85,
-    label: 'Area Rug',
-    category: 'Textiles',
-    description: 'Hand-tufted wool rug with subtle geometric pattern. Soft underfoot and durable for high-traffic areas.',
-    material: 'New Zealand Wool · Cotton Backing · Natural Dyes',
-    origin: 'Textile Atelier, 2025',
     icon: 'rug',
+    label: 'Hand-Tufted Area Rug',
+    category: 'Textiles',
+    description: 'New Zealand wool rug with a subtle geometric pattern. Defines the conversation zone and anchors the entire space.',
+    material: 'NZ Wool · Cotton Backing · Natural Dyes',
   },
 ];
 
-function GlowingHotspot({
-  data,
-  visible,
-  active,
-  mousePos,
-  onClick,
-}: {
-  data: HotspotData;
-  visible: boolean;
-  active: boolean;
-  mousePos: { x: number; y: number };
-  onClick: () => void;
-}) {
-  const hotspotRef = useRef<HTMLButtonElement>(null);
-  const [hotspotRect, setHotspotRect] = useState<DOMRect | null>(null);
-
-  useEffect(() => {
-    if (hotspotRef.current) {
-      setHotspotRect(hotspotRef.current.getBoundingClientRect());
-    }
-  }, []);
-
-  const distance = hotspotRect
-    ? Math.sqrt(
-        Math.pow(mousePos.x - (hotspotRect.left + hotspotRect.width / 2), 2) +
-        Math.pow(mousePos.y - (hotspotRect.top + hotspotRect.height / 2), 2)
-      )
-    : 1000;
-
-  const maxDistance = 300;
-  const proximity = Math.max(0, 1 - distance / maxDistance);
-  const glowIntensity = active ? 1 : 0.3 + proximity * 0.7;
-  const glowSize = active ? 60 : 30 + proximity * 30;
-
-  return (
-    <button
-      ref={hotspotRef}
-      onClick={onClick}
-      className="absolute cursor-gold group"
-      style={{
-        left: `${data.x}%`,
-        top: `${data.y}%`,
-        transform: 'translate(-50%, -50%)',
-        opacity: visible ? 1 : 0,
-        transition: 'opacity 0.8s ease',
-        zIndex: 20,
-        background: 'none',
-        border: 'none',
-        padding: 0,
-      }}
-      aria-label={`View details: ${data.label}`}
-    >
-      <div
-        className="absolute rounded-full transition-all duration-300 ease-out"
-        style={{
-          width: glowSize,
-          height: glowSize,
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: `radial-gradient(circle, rgba(201,168,76,${glowIntensity * 0.4}) 0%, rgba(201,168,76,${glowIntensity * 0.1}) 50%, transparent 70%)`,
-          animation: active ? 'pulse 1.5s ease-in-out infinite' : 'none',
-        }}
-      />
-      <div
-        className="relative flex items-center justify-center rounded-full transition-all duration-300"
-        style={{
-          width: 16,
-          height: 16,
-          background: active ? 'var(--gold)' : `rgba(201,168,76,${0.6 + proximity * 0.4})`,
-          border: '2px solid rgba(255,255,255,0.8)',
-          boxShadow: active
-            ? `0 0 0 6px rgba(201,168,76,${0.4 + proximity * 0.3}), 0 4px 20px rgba(201,168,76,${0.5 + proximity * 0.3})`
-            : `0 0 0 3px rgba(201,168,76,${proximity * 0.4}), 0 2px 12px rgba(0,0,0,${0.3 + proximity * 0.2})`,
-        }}
-      />
-      <div
-        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-4 whitespace-nowrap px-4 py-2 rounded-lg text-[10px] tracking-[0.25em] uppercase font-body pointer-events-none transition-all duration-300"
-        style={{
-          background: 'rgba(13,13,13,0.9)',
-          color: 'var(--gold-light)',
-          border: `1px solid rgba(201,168,76,${0.3 + proximity * 0.4})`,
-          backdropFilter: 'blur(10px)',
-          opacity: proximity > 0.2 ? 1 : 0,
-          transform: `translateY(${proximity > 0.2 ? 0 : 10}px) scale(${proximity > 0.2 ? 1 : 0.9})`,
-        }}
-      >
-        {data.label}
-      </div>
-    </button>
-  );
-}
-
-function GlassCard({ data, onClose }: { data: HotspotData; onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  const isRight = data.x > 55;
-  const isBottom = data.y > 55;
-
-  return (
-    <>
-      <div
-        className="absolute inset-0 z-30"
-        onClick={onClose}
-        style={{ background: 'rgba(0,0,0,0.3)' }}
-      />
-      <div
-        className="absolute z-40 glass rounded-2xl overflow-hidden"
-        style={{
-          left: isRight ? 'auto' : `${Math.min(data.x + 5, 55)}%`,
-          right: isRight ? `${100 - data.x + 5}%` : 'auto',
-          top: isBottom ? 'auto' : `${Math.min(data.y + 5, 50)}%`,
-          bottom: isBottom ? `${100 - data.y + 5}%` : 'auto',
-          width: 'clamp(320px, 35vw, 420px)',
-          animation: 'fade-in-up 0.4s cubic-bezier(0.16,1,0.3,1) forwards',
-          boxShadow: '0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(201,168,76,0.3)',
-          backdropFilter: 'blur(20px)',
-          background: 'rgba(13,13,13,0.85)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div
-          className="h-[3px] w-full"
-          style={{ background: 'linear-gradient(90deg, transparent, var(--gold), transparent)' }}
-        />
-        <div className="p-7">
-          <div className="flex items-start justify-between mb-5">
-            <div className="flex items-center gap-4">
-              <span
-                style={{
-                  display:        'flex',
-                  alignItems:     'center',
-                  justifyContent: 'center',
-                  width:          48,
-                  height:         48,
-                  borderRadius:   '50%',
-                  background:     'rgba(201,168,76,0.15)',
-                  border:         '1.5px solid rgba(201,168,76,0.4)',
-                  color:          '#C9A84C',
-                  flexShrink:     0,
-                }}
-              >
-                {HOTSPOT_ICONS[data.icon] ?? null}
-              </span>
-              <div>
-                <span
-                  className="block text-[9px] tracking-[0.45em] uppercase font-body mb-1"
-                  style={{ color: 'var(--gold)' }}
-                >
-                  {data.category}
-                </span>
-                <h3
-                  className="font-display font-medium leading-tight"
-                  style={{
-                    fontSize: 'clamp(1.2rem, 2.5vw, 1.5rem)',
-                    color: 'var(--warm-white)',
-                  }}
-                >
-                  {data.label}
-                </h3>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 flex-shrink-0"
-              style={{
-                background: 'rgba(201,168,76,0.15)',
-                border: '2px solid rgba(201,168,76,0.3)',
-                color: 'var(--gold)',
-                fontSize: 16,
-              }}
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="mb-5" style={{ height: '1px', background: 'rgba(201,168,76,0.2)' }} />
-          <p
-            className="font-body font-light leading-relaxed mb-6 text-base"
-            style={{ color: 'rgba(248,244,238,0.8)', lineHeight: 1.85 }}
-          >
-            {data.description}
-          </p>
-          <div className="flex flex-col gap-4">
-            <DetailRow label="Materials" value={data.material} />
-            <DetailRow label="Origin" value={data.origin} />
-          </div>
-          <div className="mt-6 flex items-center gap-3">
-            <span
-              className="text-[8px] tracking-[0.45em] uppercase font-body px-4 py-2 rounded-full"
-              style={{
-                background: 'rgba(201,168,76,0.15)',
-                border: '1px solid rgba(201,168,76,0.35)',
-                color: 'var(--gold)',
-              }}
-            >
-              ◇ Design Studio Piece
-            </span>
-          </div>
-        </div>
-        <div
-          className="h-[2px] w-full"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent)' }}
-        />
-      </div>
-    </>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span
-        className="text-[9px] tracking-[0.4em] uppercase font-body"
-        style={{ color: 'var(--gold)' }}
-      >
-        {label}
-      </span>
-      <span
-        className="text-[12px] font-body font-light"
-        style={{ color: 'rgba(248,244,238,0.65)', lineHeight: 1.6 }}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
+/* ─── Component ──────────────────────────────────────────────────── */
 export function SuiteSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const [progress, setProgress] = useState(0);
-  const [activeHotspot, setActiveHotspot] = useState<HotspotData | null>(null);
+  const sectionRef              = useRef<HTMLElement>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    const onScroll = () => {
-      if (!sectionRef.current) return;
-      const rect = sectionRef.current.getBoundingClientRect();
-      const p = Math.max(0, Math.min(1, -rect.top / (rect.height - window.innerHeight)));
-      setProgress(p);
-      if (p > 0.05) setRevealed(true);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setRevealed(true); },
+      { threshold: 0.05 }
+    );
+    if (sectionRef.current) obs.observe(sectionRef.current);
+    return () => obs.disconnect();
   }, []);
 
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', onMouseMove);
-    return () => window.removeEventListener('mousemove', onMouseMove);
-  }, []);
-
-  const closeCard = useCallback(() => setActiveHotspot(null), []);
-
-  const imageScale = Math.max(1, 1.35 - progress * 0.35);
-  const brightness = 0.5 + progress * 0.5;
+  const active = ELEMENTS[activeIdx];
 
   return (
     <section
       id="suite"
       ref={sectionRef}
-      className="relative w-full"
-      style={{ height: '280vh' }}
+      style={{ background: '#080806', width: '100%', position: 'relative', overflow: 'hidden' }}
     >
-      <div className="sticky top-0 w-full h-screen overflow-hidden">
-        <div
-          className="absolute inset-0 zoom-image"
-          style={{
-            transform: `scale(${imageScale})`,
-            filter: `brightness(${brightness})`,
-            transition: 'transform 0.08s linear, filter 0.08s linear',
-          }}
-        >
-          <img
-            src="/renders/Luxurious presidential suite Infinity feel 1.png"
-            alt="Modern Living Space — Interior Design"
-            className="w-full h-full object-cover object-center"
-            draggable={false}
-          />
-        </div>
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: `radial-gradient(ellipse at center, transparent 40%, rgba(13,13,13,0.7) 100%)`,
-          }}
-        />
-        <div
-          className="absolute inset-x-0 top-0 h-32 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, rgba(13,13,13,0.8), transparent)' }}
-        />
-        <div
-          className="absolute top-28 left-8 md:left-20 flex flex-col gap-2"
-          style={{
-            opacity: revealed ? 1 : 0,
-            transform: revealed ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'opacity 1s ease, transform 1s ease',
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="gold-line" />
-            <span
-              className="text-[9px] tracking-[0.5em] uppercase font-body"
-              style={{ color: 'var(--gold)' }}
-            >
-              Interior Design Studio · Living Space
+      {/* ── Header strip ─────────────────────────────────────────── */}
+      <div
+        style={{
+          padding:        'clamp(64px, 7vw, 96px) clamp(32px, 5vw, 80px) 0',
+          display:        'flex',
+          alignItems:     'flex-end',
+          justifyContent: 'space-between',
+          flexWrap:       'wrap',
+          gap:            32,
+          opacity:        revealed ? 1 : 0,
+          transform:      revealed ? 'translateY(0)' : 'translateY(20px)',
+          transition:     'opacity 0.7s ease, transform 0.7s ease',
+        }}
+      >
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+            <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg, transparent, #C9A84C)' }} />
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.48rem', letterSpacing: '0.55em', textTransform: 'uppercase', color: '#C9A84C' }}>
+              Interior Design Studio
             </span>
           </div>
-          <h2
-            className="font-display font-light"
-            style={{
-              fontSize: 'clamp(2rem, 5vw, 4.5rem)',
-              color: 'var(--warm-white)',
-              letterSpacing: '-0.01em',
-              lineHeight: 1,
-            }}
-          >
-            Modern
-            <br />
-            <em style={{ color: 'var(--gold-light)', fontStyle: 'italic' }}>Living</em>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(2.2rem, 4vw, 4.2rem)', color: '#F8F4EE', letterSpacing: '-0.025em', lineHeight: 0.93 }}>
+            Crafted{' '}
+            <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>Elements</em>
           </h2>
         </div>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'rgba(248,244,238,0.32)', lineHeight: 1.85, maxWidth: 300, textAlign: 'right' }}>
+          Every piece is curated for form and function — selected with precision and placed with intent.
+        </p>
+      </div>
+
+      {/* ── 2-column grid ────────────────────────────────────────── */}
+      <div
+        style={{
+          display:             'grid',
+          gridTemplateColumns: '55% 45%',
+          minHeight:           '82vh',
+          marginTop:           40,
+        }}
+      >
+        {/* Left: image panel */}
+        <div style={{ position: 'relative', overflow: 'hidden', minHeight: 520 }}>
+          <img
+            src="/renders/Luxurious presidential suite Infinity feel 1.png"
+            alt="Presidential Suite — Interior Design"
+            draggable={false}
+            style={{
+              position:       'absolute',
+              inset:          0,
+              width:          '100%',
+              height:         '100%',
+              objectFit:      'cover',
+              objectPosition: 'center',
+              transform:      revealed ? 'scale(1)' : 'scale(1.05)',
+              transition:     'transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            }}
+          />
+          {/* Right-side fade to dark (blends into list panel) */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, transparent 50%, rgba(8,8,6,0.55) 100%)' }} />
+          {/* Bottom fade */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(8,8,6,0.65) 0%, transparent 45%)' }} />
+          {/* Top fade */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(8,8,6,0.5) 0%, transparent 30%)' }} />
+
+          {/* Ghost index number */}
+          <div
+            style={{
+              position:    'absolute',
+              bottom:      0,
+              left:        0,
+              fontFamily:  'var(--font-display)',
+              fontSize:    'clamp(9rem, 18vw, 16rem)',
+              fontWeight:  300,
+              color:       'rgba(201,168,76,0.07)',
+              lineHeight:  0.78,
+              letterSpacing: '-0.06em',
+              userSelect:  'none',
+              paddingLeft: 28,
+              transition:  'color 0.5s ease',
+            }}
+          >
+            0{activeIdx + 1}
+          </div>
+
+          {/* Active element label */}
+          <div
+            style={{
+              position:   'absolute',
+              bottom:     44,
+              left:       44,
+              opacity:    revealed ? 1 : 0,
+              transform:  revealed ? 'translateY(0)' : 'translateY(12px)',
+              transition: 'opacity 0.7s ease 0.3s, transform 0.7s ease 0.3s',
+            }}
+          >
+            <span
+              style={{
+                display:       'block',
+                fontFamily:    'var(--font-body)',
+                fontSize:      '0.42rem',
+                letterSpacing: '0.5em',
+                textTransform: 'uppercase',
+                color:         '#C9A84C',
+                marginBottom:  10,
+              }}
+            >
+              {active.category}
+            </span>
+            <h3
+              style={{
+                fontFamily:    'var(--font-display)',
+                fontWeight:    300,
+                fontSize:      'clamp(1.6rem, 3vw, 2.6rem)',
+                color:         '#F8F4EE',
+                lineHeight:    1.05,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {active.label}
+            </h3>
+          </div>
+        </div>
+
+        {/* Right: expandable list */}
         <div
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
           style={{
-            opacity: revealed && progress < 0.7 ? 1 : 0,
-            transition: 'opacity 0.6s ease',
+            background:     '#080806',
+            display:        'flex',
+            flexDirection:  'column',
+            justifyContent: 'center',
+            padding:        'clamp(48px, 5vw, 72px) clamp(32px, 4vw, 60px)',
+            borderLeft:     '1px solid rgba(248,244,238,0.04)',
           }}
         >
-          <span
-            className="text-[9px] tracking-[0.4em] uppercase font-body"
-            style={{ color: 'var(--gold)' }}
+          {/* Subtitle */}
+          <p
+            style={{
+              fontFamily:    'var(--font-body)',
+              fontSize:      '0.44rem',
+              letterSpacing: '0.45em',
+              textTransform: 'uppercase',
+              color:         'rgba(248,244,238,0.2)',
+              marginBottom:  32,
+              opacity:       revealed ? 1 : 0,
+              transition:    'opacity 0.6s ease',
+            }}
           >
-            Tap the hotspots to explore
-          </span>
-          <div
-            className="w-px h-8"
-            style={{ background: 'linear-gradient(to bottom, var(--gold), transparent)' }}
-          />
+            Hover to explore
+          </p>
+
+          {/* List */}
+          <div style={{ borderTop: '1px solid rgba(248,244,238,0.07)' }}>
+            {ELEMENTS.map((el, i) => {
+              const isActive = i === activeIdx;
+              return (
+                <div
+                  key={el.id}
+                  onMouseEnter={() => setActiveIdx(i)}
+                  onClick={() => setActiveIdx(i)}
+                  style={{
+                    borderBottom: '1px solid rgba(248,244,238,0.07)',
+                    padding:      '18px 0',
+                    cursor:       'pointer',
+                    opacity:      revealed ? 1 : 0,
+                    transform:    revealed ? 'translateY(0)' : 'translateY(14px)',
+                    transition:   `opacity 0.55s ease ${i * 65}ms, transform 0.55s ease ${i * 65}ms`,
+                  }}
+                >
+                  {/* Row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    {/* Index */}
+                    <span
+                      style={{
+                        fontFamily:    'var(--font-body)',
+                        fontSize:      '0.4rem',
+                        letterSpacing: '0.4em',
+                        color:         isActive ? '#C9A84C' : 'rgba(201,168,76,0.22)',
+                        transition:    'color 0.3s ease',
+                        minWidth:      22,
+                        flexShrink:    0,
+                      }}
+                    >
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    {/* Icon */}
+                    <span
+                      style={{
+                        color:      isActive ? '#C9A84C' : 'rgba(248,244,238,0.16)',
+                        transition: 'color 0.3s ease',
+                        flexShrink: 0,
+                        display:    'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      {HOTSPOT_ICONS[el.icon]}
+                    </span>
+                    {/* Label */}
+                    <span
+                      style={{
+                        fontFamily:    'var(--font-display)',
+                        fontWeight:    300,
+                        fontSize:      'clamp(0.95rem, 1.6vw, 1.3rem)',
+                        color:         isActive ? '#F8F4EE' : 'rgba(248,244,238,0.2)',
+                        transition:    'color 0.3s ease',
+                        flex:          1,
+                        letterSpacing: '-0.01em',
+                      }}
+                    >
+                      {el.label}
+                    </span>
+                    {/* Category pill */}
+                    <span
+                      style={{
+                        fontFamily:    'var(--font-body)',
+                        fontSize:      '0.37rem',
+                        letterSpacing: '0.35em',
+                        textTransform: 'uppercase',
+                        color:         isActive ? 'rgba(201,168,76,0.65)' : 'rgba(248,244,238,0.08)',
+                        transition:    'color 0.3s ease',
+                        flexShrink:    0,
+                      }}
+                    >
+                      {el.category}
+                    </span>
+                  </div>
+
+                  {/* Expanding detail */}
+                  <div
+                    style={{
+                      maxHeight:  isActive ? '110px' : '0',
+                      overflow:   'hidden',
+                      transition: 'max-height 0.5s cubic-bezier(0.4,0,0.2,1)',
+                      paddingLeft: 36,
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-body)',
+                        fontSize:   '0.8rem',
+                        color:      'rgba(248,244,238,0.4)',
+                        lineHeight: 1.85,
+                        marginTop:  12,
+                        marginBottom: 8,
+                      }}
+                    >
+                      {el.description}
+                    </p>
+                    <span
+                      style={{
+                        fontFamily:    'var(--font-body)',
+                        fontSize:      '0.38rem',
+                        letterSpacing: '0.32em',
+                        textTransform: 'uppercase',
+                        color:         'rgba(201,168,76,0.45)',
+                      }}
+                    >
+                      {el.material}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* CTA */}
+          <a
+            href="#footer"
+            style={{
+              display:       'inline-flex',
+              alignItems:    'center',
+              gap:           10,
+              marginTop:     36,
+              fontFamily:    'var(--font-body)',
+              fontSize:      '0.44rem',
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase',
+              color:         '#C9A84C',
+              textDecoration:'none',
+              opacity:       revealed ? 1 : 0,
+              transition:    'opacity 0.6s ease 0.5s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#E8C97A'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#C9A84C'; }}
+          >
+            <div style={{ width: 28, height: 1, background: '#C9A84C', transition: 'width 0.3s ease' }} />
+            Begin a project conversation
+          </a>
         </div>
-        {HOTSPOTS.map((spot) => (
-          <GlowingHotspot
-            key={spot.id}
-            data={spot}
-            visible={revealed && progress > 0.1}
-            active={activeHotspot?.id === spot.id}
-            mousePos={mousePos}
-            onClick={() => setActiveHotspot(activeHotspot?.id === spot.id ? null : spot)}
-          />
-        ))}
-        {activeHotspot && (
-          <GlassCard data={activeHotspot} onClose={closeCard} />
-        )}
       </div>
     </section>
   );
 }
+
