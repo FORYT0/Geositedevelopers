@@ -1,330 +1,1005 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-const CATEGORIES = ['All', 'Hotel', 'Interior', 'Exterior'];
-
-interface PortfolioItem {
-  id: string;
-  image: string;
-  title: string;
-  subtitle: string;
-  category: string;
-  year: string;
-  tags: string[];
-  accent: string;
+/* ─── Types ─────────────────────────────────────────────────── */
+interface PortfolioCategory {
+  id:          string;
+  title:       string;
+  subtitle:    string;
+  type:        'Project' | 'Element';
+  image:       string;
+  count:       number;
+  tags:        string[];
+  description: string;
+  gallery:     string[];
 }
 
-const PORTFOLIO_ITEMS: PortfolioItem[] = [
+/* ─── Data — 12 categories: 4 Projects + 8 Elements ────────── */
+const PORTFOLIO_CATEGORIES: PortfolioCategory[] = [
+  /* PROJECTS */
   {
-    id: 'suite',
-    image: '/renders/Luxurious presidential suite Infinity feel 1.png',
-    title: 'Presidential Suite',
-    subtitle: 'Luxury Hospitality · Nairobi',
-    category: 'Interior',
-    year: '2025',
-    tags: ['Suite', 'Luxury', 'Hospitality'],
-    accent: '#C9A84C',
+    id:          'presidential-suite',
+    title:       'Presidential Suite',
+    subtitle:    'Full Interior Redesign · Westlands',
+    type:        'Project',
+    image:       '/renders/Luxurious presidential suite Infinity feel 1.png',
+    count:       8,
+    tags:        ['Suite', 'Luxury', 'Full Interior', 'Bespoke'],
+    description: 'A complete transformation of a presidential suite. Custom furniture, integrated lighting, hand-selected marble and velvet — every detail considered from floor plan to final finish.',
+    gallery: [
+      '/renders/Luxurious presidential suite Infinity feel 1.png',
+      '/renders/Blue Spiral Hotel Entrance Final.png',
+      '/renders/Blue Spiral Hotel Ground full render.png',
+    ],
   },
   {
-    id: 'hotel-ground',
-    image: '/renders/Blue Spiral Hotel Ground full render.png',
-    title: 'Blue Spiral Hotel',
-    subtitle: 'Mixed-Use Development · Karen',
-    category: 'Hotel',
-    year: '2025',
-    tags: ['Hotel', 'Commercial', 'BIM'],
-    accent: '#8B7355',
+    id:          'blue-spiral-hotel',
+    title:       'Blue Spiral Hotel',
+    subtitle:    'Lobby & Common Areas · Karen',
+    type:        'Project',
+    image:       '/renders/Blue Spiral Hotel Entrance Final.png',
+    count:       12,
+    tags:        ['Hotel', 'Commercial', 'BIM', 'Hospitality'],
+    description: 'A landmark hospitality project balancing grandeur with warmth. A spiral motif threads through every space — from entrance canopy to corridor ceilings — unifying the entire property.',
+    gallery: [
+      '/renders/Blue Spiral Hotel Entrance Final.png',
+      '/renders/Blue Spiral Hotel Ground full render.png',
+      '/renders/Blue Spiral Hotel Render.jpg',
+    ],
   },
   {
-    id: 'hotel-render',
-    image: '/renders/Blue Spiral Hotel Render.jpg',
-    title: 'Spiral Tower Complex',
-    subtitle: 'Architectural Concept · Westlands',
-    category: 'Exterior',
-    year: '2024',
-    tags: ['Architecture', 'Concept', '3D Render'],
-    accent: '#7A8B8B',
+    id:          'spiral-tower',
+    title:       'Spiral Tower Complex',
+    subtitle:    'Architectural Concept · Runda',
+    type:        'Project',
+    image:       '/renders/Blue Spiral Hotel Render.jpg',
+    count:       6,
+    tags:        ['Architecture', 'Mixed-Use', 'Concept', '3D Render'],
+    description: 'An architectural concept exploring organic spiral form within a mixed-use programme. BIM-modelled in full, allowing stakeholders to walk through every floor before breaking ground.',
+    gallery: [
+      '/renders/Blue Spiral Hotel Render.jpg',
+      '/renders/Geosite page 1 Backdrop.jpg',
+      '/renders/Blue Spiral Hotel Ground full render.png',
+    ],
   },
   {
-    id: 'hotel-entrance',
-    image: '/renders/Blue Spiral Hotel Entrance Final.png',
-    title: 'Grand Hotel Entrance',
-    subtitle: 'Hospitality Design · Nairobi',
-    category: 'Exterior',
-    year: '2025',
-    tags: ['Entrance', 'Landscape', 'Lighting'],
-    accent: '#A0522D',
+    id:          'signature-development',
+    title:       'Signature Development',
+    subtitle:    'Mixed-Use Premium · Muthaiga',
+    type:        'Project',
+    image:       '/renders/Geosite page 1 Backdrop.jpg',
+    count:       9,
+    tags:        ['Development', 'Premium', 'Residential', 'Retail'],
+    description: 'A signature mixed-use development featuring premium residences above curated retail. Material palette draws from Kenyan stone, reclaimed timber, and locally crafted metalwork.',
+    gallery: [
+      '/renders/Geosite page 1 Backdrop.jpg',
+      '/renders/Blue Spiral Hotel Render.jpg',
+      '/renders/Blue Spiral Hotel Entrance Final.png',
+    ],
+  },
+
+  /* ELEMENTS */
+  {
+    id:          'bespoke-furniture',
+    title:       'Bespoke Furniture',
+    subtitle:    'Custom Pieces & Upholstery',
+    type:        'Element',
+    image:       '/renders/Luxurious presidential suite Infinity feel 1.png',
+    count:       24,
+    tags:        ['Sofas', 'Dining Tables', 'Chairs', 'Ottomans'],
+    description: 'Every furniture piece in our projects is custom-designed and locally fabricated. We work with Nairobi\'s finest craftsmen to produce pieces that cannot be bought off a showroom floor.',
+    gallery: [
+      '/renders/Luxurious presidential suite Infinity feel 1.png',
+      '/renders/Blue Spiral Hotel Entrance Final.png',
+      '/renders/Blue Spiral Hotel Ground full render.png',
+    ],
   },
   {
-    id: 'backdrop',
-    image: '/renders/Geosite page 1 Backdrop.jpg',
-    title: 'Signature Development',
-    subtitle: 'Mixed-Use · Runda',
-    category: 'Exterior',
-    year: '2026',
-    tags: ['Development', 'Signature', 'Premium'],
-    accent: '#4A6741',
+    id:          'wall-units',
+    title:       'Custom Wall Units',
+    subtitle:    'Built-In Joinery & Shelving',
+    type:        'Element',
+    image:       '/renders/Blue Spiral Hotel Entrance Final.png',
+    count:       16,
+    tags:        ['Entertainment Units', 'Library Walls', 'Storage', 'Walnut'],
+    description: 'Custom-built wall units that combine storage with sculpture. From floor-to-ceiling library walls to integrated entertainment systems, each unit is designed to the millimetre.',
+    gallery: [
+      '/renders/Blue Spiral Hotel Entrance Final.png',
+      '/renders/Luxurious presidential suite Infinity feel 1.png',
+      '/renders/Blue Spiral Hotel Ground full render.png',
+    ],
   },
   {
-    id: 'suite-2',
-    image: '/renders/Luxurious presidential suite Infinity feel 1.png',
-    title: 'Infinity Suite',
-    subtitle: 'Private Residence · Muthaiga',
-    category: 'Interior',
-    year: '2026',
-    tags: ['Interior', 'Bespoke', 'Private'],
-    accent: '#9B7B5A',
+    id:          'statement-lighting',
+    title:       'Statement Lighting',
+    subtitle:    'Ambient, Feature & Task Layers',
+    type:        'Element',
+    image:       '/renders/Blue Spiral Hotel Ground full render.png',
+    count:       20,
+    tags:        ['Pendants', 'Arc Lamps', 'Recessed', 'Cove Lighting'],
+    description: 'Lighting transforms space from the functional to the theatrical. We layer ambient, task, and accent sources — each dimmable, each precisely positioned to sculpt the room after dark.',
+    gallery: [
+      '/renders/Blue Spiral Hotel Ground full render.png',
+      '/renders/Luxurious presidential suite Infinity feel 1.png',
+      '/renders/Blue Spiral Hotel Entrance Final.png',
+    ],
+  },
+  {
+    id:          'premium-flooring',
+    title:       'Premium Flooring',
+    subtitle:    'Oak, Marble & Hand-Tufted Rugs',
+    type:        'Element',
+    image:       '/renders/Luxurious presidential suite Infinity feel 1.png',
+    count:       14,
+    tags:        ['Engineered Oak', 'Italian Marble', 'NZ Wool Rugs', 'Terrazzo'],
+    description: 'The foundation of any great interior. We specify flooring for feel underfoot as much as for visual beauty — from wide-plank engineered oak to book-matched Calacatta marble.',
+    gallery: [
+      '/renders/Luxurious presidential suite Infinity feel 1.png',
+      '/renders/Blue Spiral Hotel Ground full render.png',
+      '/renders/Geosite page 1 Backdrop.jpg',
+    ],
+  },
+  {
+    id:          'curated-artwork',
+    title:       'Curated Artwork',
+    subtitle:    'Paintings, Sculptures & Prints',
+    type:        'Element',
+    image:       '/renders/Blue Spiral Hotel Render.jpg',
+    count:       32,
+    tags:        ['Abstract', 'Sculptures', 'Photography', 'Ceramics'],
+    description: 'Art is the soul of an interior. We source and commission works by emerging and established African artists, placing each piece to create a conversation between art and architecture.',
+    gallery: [
+      '/renders/Blue Spiral Hotel Render.jpg',
+      '/renders/Geosite page 1 Backdrop.jpg',
+      '/renders/Luxurious presidential suite Infinity feel 1.png',
+    ],
+  },
+  {
+    id:          'bathroom-design',
+    title:       'Bathroom Design',
+    subtitle:    'Spa-Level Residential Finishes',
+    type:        'Element',
+    image:       '/renders/Blue Spiral Hotel Entrance Final.png',
+    count:       18,
+    tags:        ['Freestanding Tubs', 'Rain Showers', 'Heated Floors', 'Marble'],
+    description: 'We design bathrooms as private sanctuaries. Freestanding tubs, rain showers, heated marble floors, and integrated steam — every finish chosen to transform the daily ritual.',
+    gallery: [
+      '/renders/Blue Spiral Hotel Entrance Final.png',
+      '/renders/Luxurious presidential suite Infinity feel 1.png',
+      '/renders/Blue Spiral Hotel Render.jpg',
+    ],
+  },
+  {
+    id:          'kitchen-dining',
+    title:       'Kitchen & Dining',
+    subtitle:    'Custom Culinary Spaces',
+    type:        'Element',
+    image:       '/renders/Blue Spiral Hotel Ground full render.png',
+    count:       11,
+    tags:        ['Custom Joinery', 'Stone Islands', 'Integrated Appliances', 'Dining'],
+    description: 'The heart of the home, reimagined. Island joinery in natural walnut, stone-topped surfaces, and integrated appliances that disappear into the architecture — made for people who cook.',
+    gallery: [
+      '/renders/Blue Spiral Hotel Ground full render.png',
+      '/renders/Blue Spiral Hotel Entrance Final.png',
+      '/renders/Geosite page 1 Backdrop.jpg',
+    ],
+  },
+  {
+    id:          'textiles-drapery',
+    title:       'Textiles & Drapery',
+    subtitle:    'Soft Furnishings & Window Treatments',
+    type:        'Element',
+    image:       '/renders/Geosite page 1 Backdrop.jpg',
+    count:       28,
+    tags:        ['Floor-to-Ceiling Drapes', 'Cushions', 'Throws', 'Upholstery'],
+    description: 'Textiles bring warmth, texture, and character to any interior. We source from specialist weavers across East Africa — linen, silk, and hand-loomed cotton — each chosen for hand feel first.',
+    gallery: [
+      '/renders/Geosite page 1 Backdrop.jpg',
+      '/renders/Blue Spiral Hotel Ground full render.png',
+      '/renders/Luxurious presidential suite Infinity feel 1.png',
+    ],
   },
 ];
 
+/* ─── Layout constants ──────────────────────────────────────── */
+const COL_OFFSET   = [0, 60, 30, 80];   // px top stagger per column
+const COL_ROTATION = [-0.45, 0.35, -0.3, 0.55]; // deg per column
+const DWELL_MS     = 5000;
+const TICK_MS      = 50;
+const TIMER_R      = 22;
+const TIMER_C      = 2 * Math.PI * TIMER_R;
+
+/* ─── Circular timer ────────────────────────────────────────── */
+function CircularTimer({ progress }: { progress: number }) {
+  const offset = TIMER_C * (1 - progress / 100);
+  return (
+    <svg width={60} height={60} style={{ transform: 'rotate(-90deg)' }}>
+      <circle cx={30} cy={30} r={TIMER_R} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={2} />
+      <circle
+        cx={30} cy={30} r={TIMER_R}
+        fill="none"
+        stroke="#C9A84C"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeDasharray={TIMER_C}
+        strokeDashoffset={offset}
+        style={{ transition: `stroke-dashoffset ${TICK_MS}ms linear` }}
+      />
+    </svg>
+  );
+}
+
+/* ─── Portfolio card ────────────────────────────────────────── */
+function PortfolioCard({
+  cat,
+  index,
+  isAnyExpanded,
+  onExpand,
+}: {
+  cat:           PortfolioCategory;
+  index:         number;
+  isAnyExpanded: boolean;
+  onExpand:      (id: string, rect: DOMRect) => void;
+}) {
+  const cardRef   = useRef<HTMLDivElement>(null);
+  const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startRef  = useRef(0);
+
+  const [hovered,  setHovered]  = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [tilt,     setTilt]     = useState({ x: 0, y: 0 });
+
+  const col = index % 4;
+
+  /* start dwell timer */
+  const startTimer = useCallback(() => {
+    if (timerRef.current) return;
+    startRef.current = Date.now();
+    timerRef.current = setInterval(() => {
+      const elapsed = Date.now() - startRef.current;
+      const p = Math.min(100, (elapsed / DWELL_MS) * 100);
+      setProgress(p);
+      if (p >= 100) {
+        clearInterval(timerRef.current!);
+        timerRef.current = null;
+        if (cardRef.current) onExpand(cat.id, cardRef.current.getBoundingClientRect());
+      }
+    }, TICK_MS);
+  }, [cat.id, onExpand]);
+
+  /* stop & reset */
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setProgress(0);
+  }, []);
+
+  /* 3-D tilt */
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const r  = cardRef.current.getBoundingClientRect();
+    const dx = (e.clientX - r.left  - r.width  / 2) / (r.width  / 2);
+    const dy = (e.clientY - r.top   - r.height / 2) / (r.height / 2);
+    setTilt({ x: -dy * 7, y: dx * 7 });
+  }, []);
+
+  /* cleanup */
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const gsId = `GS ${String(index + 1).padStart(3, '0')}`;
+
+  /* build transform */
+  const baseRotation  = `rotate(${COL_ROTATION[col]}deg)`;
+  const activeTransform = isAnyExpanded
+    ? `scale(0.86) ${baseRotation}`
+    : hovered
+      ? `perspective(700px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1.04)`
+      : `perspective(700px) scale(1) ${baseRotation}`;
+
+  return (
+    <div
+      ref={cardRef}
+      style={{
+        position:    'relative',
+        marginTop:   COL_OFFSET[col],
+        marginBottom: -32,
+        zIndex:       hovered ? 30 : 12 - index,
+        transform:    activeTransform,
+        opacity:      isAnyExpanded ? 0.32 : 1,
+        transition:   'transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.45s ease',
+        cursor:       'pointer',
+      }}
+      onMouseEnter={() => { setHovered(true);  startTimer(); }}
+      onMouseLeave={() => { setHovered(false); stopTimer();  setTilt({ x: 0, y: 0 }); }}
+      onMouseMove={handleMouseMove}
+      onClick={() => {
+        if (cardRef.current) onExpand(cat.id, cardRef.current.getBoundingClientRect());
+      }}
+    >
+      {/* Card face */}
+      <div
+        style={{
+          position:     'relative',
+          overflow:     'hidden',
+          aspectRatio:  '3/4',
+          background:   '#1A1814',
+          boxShadow:    hovered
+            ? '0 28px 60px rgba(0,0,0,0.28), 0 8px 20px rgba(0,0,0,0.18)'
+            : '0 8px 24px rgba(0,0,0,0.14)',
+          transition:   'box-shadow 0.4s ease',
+        }}
+      >
+        {/* Image */}
+        <img
+          src={cat.image}
+          alt={cat.title}
+          draggable={false}
+          style={{
+            position:       'absolute',
+            inset:          0,
+            width:          '100%',
+            height:         '100%',
+            objectFit:      'cover',
+            objectPosition: 'center',
+            transform:      hovered ? 'scale(1.09)' : 'scale(1.01)',
+            transition:     'transform 0.9s cubic-bezier(0.16,1,0.3,1)',
+          }}
+        />
+
+        {/* Gradient overlay */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(8,8,6,0.93) 0%, rgba(8,8,6,0.18) 50%, transparent 75%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: `rgba(8,8,6,${hovered ? 0.28 : 0})`, transition: 'background 0.4s ease' }} />
+
+        {/* Top: GS id + type badge */}
+        <div style={{ position: 'absolute', top: 14, left: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.37rem', letterSpacing: '0.42em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.42)' }}>
+            {gsId}
+          </span>
+          <span style={{ display: 'inline-block', width: 10, height: 1, background: 'rgba(248,244,238,0.15)' }} />
+          <span
+            style={{
+              fontFamily:    'var(--font-body)',
+              fontSize:      '0.35rem',
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase',
+              padding:       '3px 9px',
+              background:    'rgba(8,8,6,0.7)',
+              border:        '1px solid rgba(201,168,76,0.4)',
+              color:         '#C9A84C',
+              backdropFilter:'blur(8px)',
+            }}
+          >
+            {cat.type}
+          </span>
+        </div>
+
+        {/* Top-right: count */}
+        <div style={{ position: 'absolute', top: 14, right: 14 }}>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.37rem', letterSpacing: '0.3em', color: 'rgba(248,244,238,0.32)' }}>
+            {cat.count} items
+          </span>
+        </div>
+
+        {/* Circular dwell timer — centred */}
+        <div
+          style={{
+            position:   'absolute',
+            top:        '50%',
+            left:       '50%',
+            transform:  'translate(-50%, -50%)',
+            opacity:    progress > 0 ? 1 : 0,
+            transition: 'opacity 0.3s ease',
+            pointerEvents: 'none',
+            zIndex:     10,
+          }}
+        >
+          <CircularTimer progress={progress} />
+        </div>
+
+        {/* Hold hint */}
+        <div
+          style={{
+            position:      'absolute',
+            bottom:        8,
+            right:         14,
+            fontFamily:    'var(--font-body)',
+            fontSize:      '0.34rem',
+            letterSpacing: '0.35em',
+            textTransform: 'uppercase',
+            color:         '#C9A84C',
+            opacity:       progress > 0 ? 0.9 : 0,
+            transition:    'opacity 0.3s ease',
+            pointerEvents: 'none',
+          }}
+        >
+          Hold to expand
+        </div>
+
+        {/* Card content — bottom */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '18px 18px 20px' }}>
+          <p
+            style={{
+              fontFamily:    'var(--font-body)',
+              fontSize:      '0.38rem',
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase',
+              color:         '#C9A84C',
+              marginBottom:  8,
+            }}
+          >
+            {cat.subtitle}
+          </p>
+          <h3
+            style={{
+              fontFamily:    'var(--font-display)',
+              fontWeight:    300,
+              fontSize:      'clamp(0.95rem, 1.6vw, 1.25rem)',
+              color:         '#F8F4EE',
+              lineHeight:    1.1,
+              letterSpacing: '-0.01em',
+              marginBottom:  10,
+            }}
+          >
+            {cat.title}
+          </h3>
+
+          {/* Tags — reveal on hover */}
+          <div
+            style={{
+              display:    'flex',
+              flexWrap:   'wrap',
+              gap:        5,
+              maxHeight:  hovered ? '36px' : '0',
+              overflow:   'hidden',
+              opacity:    hovered ? 1 : 0,
+              transition: 'max-height 0.4s ease, opacity 0.4s ease',
+            }}
+          >
+            {cat.tags.slice(0, 3).map(tag => (
+              <span
+                key={tag}
+                style={{
+                  fontFamily:    'var(--font-body)',
+                  fontSize:      '0.34rem',
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  padding:       '3px 7px',
+                  background:    'rgba(255,255,255,0.07)',
+                  border:        '1px solid rgba(255,255,255,0.07)',
+                  color:         'rgba(248,244,238,0.45)',
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Left gold accent line */}
+        <div
+          style={{
+            position:   'absolute',
+            top:        0,
+            left:       0,
+            bottom:     0,
+            width:      3,
+            background: 'linear-gradient(to bottom, transparent, #C9A84C 40%, transparent)',
+            opacity:    hovered ? 1 : 0,
+            transition: 'opacity 0.4s ease',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ─── Full-screen expanded view ─────────────────────────────── */
+function ExpandedView({
+  cat,
+  expandFrom,
+  isExpanded,
+  onClose,
+}: {
+  cat:        PortfolioCategory;
+  expandFrom: DOMRect;
+  isExpanded: boolean;
+  onClose:    () => void;
+}) {
+  const [contentVisible, setContentVisible] = useState(false);
+
+  /* fade in content after the expansion animation completes */
+  useEffect(() => {
+    if (isExpanded) {
+      const t = setTimeout(() => setContentVisible(true), 600);
+      return () => clearTimeout(t);
+    } else {
+      setContentVisible(false);
+    }
+  }, [isExpanded]);
+
+  /* scroll-down closes */
+  useEffect(() => {
+    const handler = (e: WheelEvent) => { if (e.deltaY > 12) onClose(); };
+    window.addEventListener('wheel', handler, { passive: true });
+    return () => window.removeEventListener('wheel', handler);
+  }, [onClose]);
+
+  /* Escape closes */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  /* lock body scroll while expanded */
+  useEffect(() => {
+    document.body.style.overflow = isExpanded ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isExpanded]);
+
+  return (
+    <div
+      style={{
+        position:   'fixed',
+        zIndex:     999,
+        overflow:   'hidden',
+        background: '#0A0908',
+        /* FLIP: start at card rect, animate to full viewport */
+        top:        isExpanded ? 0                 : expandFrom.top,
+        left:       isExpanded ? 0                 : expandFrom.left,
+        width:      isExpanded ? '100vw'           : expandFrom.width,
+        height:     isExpanded ? '100vh'           : expandFrom.height,
+        opacity:    isExpanded ? 1                 : 0,
+        transition: [
+          'top 0.65s cubic-bezier(0.16,1,0.3,1)',
+          'left 0.65s cubic-bezier(0.16,1,0.3,1)',
+          'width 0.65s cubic-bezier(0.16,1,0.3,1)',
+          'height 0.65s cubic-bezier(0.16,1,0.3,1)',
+          'opacity 0.4s ease',
+        ].join(', '),
+      }}
+    >
+      <div
+        style={{
+          width:    '100%',
+          height:   '100%',
+          overflow: isExpanded ? 'auto' : 'hidden',
+          opacity:  contentVisible ? 1 : 0,
+          transition:'opacity 0.5s ease',
+        }}
+      >
+        {/* Hero */}
+        <div style={{ position: 'relative', height: '56vh', minHeight: 380 }}>
+          <img
+            src={cat.image}
+            alt={cat.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+          />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0A0908 0%, rgba(10,9,8,0.25) 45%, rgba(10,9,8,0.55) 100%)' }} />
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              position:       'absolute',
+              top:            24,
+              right:          24,
+              width:          48,
+              height:         48,
+              borderRadius:   '50%',
+              border:         '1px solid rgba(201,168,76,0.4)',
+              background:     'rgba(10,9,8,0.65)',
+              backdropFilter: 'blur(12px)',
+              color:          '#C9A84C',
+              fontSize:       18,
+              cursor:         'pointer',
+              display:        'flex',
+              alignItems:     'center',
+              justifyContent: 'center',
+              zIndex:         10,
+              transition:     'background 0.3s ease',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(201,168,76,0.18)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(10,9,8,0.65)'; }}
+          >
+            ✕
+          </button>
+
+          {/* Scroll-to-close hint */}
+          <div
+            style={{
+              position:       'absolute',
+              bottom:         20,
+              left:           '50%',
+              transform:      'translateX(-50%)',
+              display:        'flex',
+              flexDirection:  'column',
+              alignItems:     'center',
+              gap:            6,
+            }}
+          >
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.45)' }}>
+              Scroll to close
+            </span>
+            <div style={{ width: 1, height: 20, background: 'linear-gradient(to bottom, #C9A84C, transparent)' }} />
+          </div>
+        </div>
+
+        {/* Content body */}
+        <div
+          style={{
+            maxWidth: 1200,
+            margin:   '0 auto',
+            padding:  'clamp(48px, 6vw, 72px) clamp(32px, 5vw, 80px) clamp(64px, 8vw, 96px)',
+          }}
+        >
+          {/* Header row */}
+          <div
+            style={{
+              display:        'flex',
+              alignItems:     'flex-start',
+              justifyContent: 'space-between',
+              flexWrap:       'wrap',
+              gap:            40,
+              marginBottom:   48,
+            }}
+          >
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+                <span
+                  style={{
+                    fontFamily:    'var(--font-body)',
+                    fontSize:      '0.42rem',
+                    letterSpacing: '0.45em',
+                    textTransform: 'uppercase',
+                    padding:       '6px 14px',
+                    border:        '1px solid rgba(201,168,76,0.4)',
+                    color:         '#C9A84C',
+                  }}
+                >
+                  {cat.type}
+                </span>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.4rem', letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.28)' }}>
+                  {cat.count} Works
+                </span>
+              </div>
+              <h2
+                style={{
+                  fontFamily:    'var(--font-display)',
+                  fontWeight:    300,
+                  fontSize:      'clamp(2.5rem, 5vw, 5rem)',
+                  color:         '#F8F4EE',
+                  letterSpacing: '-0.025em',
+                  lineHeight:    0.9,
+                  marginBottom:  14,
+                }}
+              >
+                {cat.title}
+              </h2>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.35em', textTransform: 'uppercase', color: '#C9A84C' }}>
+                {cat.subtitle}
+              </p>
+            </div>
+            <p
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize:   '0.92rem',
+                color:      'rgba(248,244,238,0.42)',
+                lineHeight: 1.9,
+                maxWidth:   420,
+              }}
+            >
+              {cat.description}
+            </p>
+          </div>
+
+          {/* Tags */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 48, paddingBottom: 40, borderBottom: '1px solid rgba(248,244,238,0.06)' }}>
+            {cat.tags.map(tag => (
+              <span
+                key={tag}
+                style={{
+                  fontFamily:    'var(--font-body)',
+                  fontSize:      '0.42rem',
+                  letterSpacing: '0.35em',
+                  textTransform: 'uppercase',
+                  padding:       '8px 18px',
+                  border:        '1px solid rgba(201,168,76,0.16)',
+                  color:         'rgba(248,244,238,0.4)',
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          {/* Gallery — 3-column with first image spanning 2 cols */}
+          <div
+            style={{
+              display:             'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateRows:    'auto',
+              gap:                 16,
+              marginBottom:        56,
+            }}
+          >
+            {cat.gallery.map((img, gi) => (
+              <div
+                key={gi}
+                style={{
+                  overflow:   'hidden',
+                  aspectRatio: gi === 0 ? '16/10' : '4/3',
+                  gridColumn:  gi === 0 ? '1 / span 2' : 'auto',
+                }}
+              >
+                <img
+                  src={img}
+                  alt={`${cat.title} — ${gi + 1}`}
+                  style={{
+                    width:      '100%',
+                    height:     '100%',
+                    objectFit:  'cover',
+                    objectPosition: 'center',
+                    transition: 'transform 0.6s ease',
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <a
+              href="#footer"
+              onClick={onClose}
+              style={{
+                display:       'inline-flex',
+                alignItems:    'center',
+                gap:           12,
+                padding:       '18px 44px',
+                fontFamily:    'var(--font-body)',
+                fontSize:      '0.44rem',
+                letterSpacing: '0.42em',
+                textTransform: 'uppercase',
+                fontWeight:    500,
+                background:    '#C9A84C',
+                color:         '#0A0908',
+                textDecoration:'none',
+                transition:    'background 0.3s ease',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#E8C97A'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#C9A84C'; }}
+            >
+              Discuss This Project
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6h8M6.5 2.5L10 6l-3.5 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main section ──────────────────────────────────────────── */
 export function PortfolioSection() {
-  const sectionRef              = useRef<HTMLElement>(null);
-  const [revealed, setRevealed] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('All');
+  const sectionRef = useRef<HTMLElement>(null);
+  const [revealed,    setRevealed]    = useState(false);
+  const [filter,      setFilter]      = useState<'All' | 'Project' | 'Element'>('All');
+  const [expandedId,  setExpandedId]  = useState<string | null>(null);
+  const [expandFrom,  setExpandFrom]  = useState<DOMRect | null>(null);
+  const [isExpanded,  setIsExpanded]  = useState(false);
 
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) setRevealed(true); },
-      { threshold: 0.06 }
+      { threshold: 0.04 }
     );
     if (sectionRef.current) obs.observe(sectionRef.current);
     return () => obs.disconnect();
   }, []);
 
-  const filtered =
-    activeCategory === 'All'
-      ? PORTFOLIO_ITEMS
-      : PORTFOLIO_ITEMS.filter(p => p.category === activeCategory);
+  const handleExpand = useCallback((id: string, rect: DOMRect) => {
+    setExpandedId(id);
+    setExpandFrom(rect);
+    /* double rAF to ensure DOM has painted before triggering transition */
+    requestAnimationFrame(() => requestAnimationFrame(() => setIsExpanded(true)));
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setIsExpanded(false);
+    setTimeout(() => { setExpandedId(null); setExpandFrom(null); }, 700);
+  }, []);
+
+  const filtered = filter === 'All'
+    ? PORTFOLIO_CATEGORIES
+    : PORTFOLIO_CATEGORIES.filter(c => c.type === filter);
+
+  const expandedCat = PORTFOLIO_CATEGORIES.find(c => c.id === expandedId);
+
+  const FILTER_LABELS: Record<string, string> = {
+    All: 'All Works', Project: 'Projects', Element: 'Elements',
+  };
 
   return (
     <section
       id="portfolio"
       ref={sectionRef}
-      className="relative w-full py-32 md:py-40 overflow-hidden"
-      style={{ background: '#FAF9F6' }}
+      style={{ position: 'relative', width: '100%', background: '#F4F0EA', overflow: 'hidden' }}
     >
-      <div className="max-w-[1400px] mx-auto px-8 md:px-16">
 
-        {/* Header */}
+      {/* ── Header ────────────────────────────────────────────── */}
+      <div
+        style={{
+          maxWidth:  1400,
+          margin:    '0 auto',
+          padding:   'clamp(80px, 10vw, 120px) clamp(32px, 5vw, 80px) 0',
+          opacity:   revealed ? 1 : 0,
+          transform: revealed ? 'none' : 'translateY(24px)',
+          transition:'opacity 0.9s ease, transform 0.9s ease',
+        }}
+      >
         <div
-          className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-14"
           style={{
-            opacity:    revealed ? 1 : 0,
-            transform:  revealed ? 'translateY(0)' : 'translateY(30px)',
-            transition: 'opacity 0.9s ease, transform 0.9s ease',
+            display:        'flex',
+            alignItems:     'flex-end',
+            justifyContent: 'space-between',
+            flexWrap:       'wrap',
+            gap:            32,
+            marginBottom:   56,
           }}
         >
           <div>
-            <div className="flex items-center gap-4 mb-5">
-              <div className="gold-line" />
-              <span
-                className="text-[9px] tracking-[0.55em] uppercase font-body"
-                style={{ color: 'var(--gold)' }}
-              >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+              <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg, transparent, #B08422, transparent)' }} />
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.48rem', letterSpacing: '0.55em', textTransform: 'uppercase', color: '#B08422' }}>
                 Geosite DEVELOPERS · 2026
               </span>
             </div>
             <h2
-              className="font-display font-light"
               style={{
+                fontFamily:    'var(--font-display)',
+                fontWeight:    300,
                 fontSize:      'clamp(2.4rem, 5vw, 5rem)',
                 color:         '#1A1614',
-                letterSpacing: '-0.02em',
-                lineHeight:    0.95,
+                letterSpacing: '-0.025em',
+                lineHeight:    0.93,
               }}
             >
               Design{' '}
-              <em style={{ color: 'var(--gold-light)', fontStyle: 'italic' }}>
-                Portfolio
-              </em>
+              <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>Portfolio</em>
             </h2>
           </div>
 
-          {/* Category filters */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {CATEGORIES.map(cat => (
+          {/* Filter pills */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {(['All', 'Project', 'Element'] as const).map(f => (
               <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className="px-5 py-2.5 text-[8px] tracking-[0.38em] uppercase font-body font-medium transition-all duration-300"
+                key={f}
+                onClick={() => setFilter(f)}
                 style={{
-                  background: cat === activeCategory ? '#B08422' : 'transparent',
-                  color:      cat === activeCategory ? '#FAF9F6' : '#7A6E60',
-                  border:     cat === activeCategory ? '1px solid #B08422' : '1px solid rgba(176,132,34,0.25)',
+                  padding:       '10px 22px',
+                  fontFamily:    'var(--font-body)',
+                  fontSize:      '0.44rem',
+                  letterSpacing: '0.38em',
+                  textTransform: 'uppercase',
+                  fontWeight:    500,
+                  background:    f === filter ? '#B08422' : 'transparent',
+                  color:         f === filter ? '#F4F0EA' : '#7A6E60',
+                  border:        f === filter ? '1px solid #B08422' : '1px solid rgba(176,132,34,0.25)',
+                  cursor:        'pointer',
+                  transition:    'all 0.3s ease',
                 }}
               >
-                {cat}
+                {FILTER_LABELS[f]}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Portfolio grid */}
-        <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          style={{
-            opacity:    revealed ? 1 : 0,
-            transform:  revealed ? 'translateY(0)' : 'translateY(40px)',
-            transition: 'opacity 0.9s ease 0.2s, transform 0.9s ease 0.2s',
-          }}
-        >
-          {filtered.map((item, i) => (
-            <PortfolioCard key={item.id} item={item} index={i} />
-          ))}
-        </div>
-
-        {/* Bottom CTA */}
-        <div
-          className="flex justify-center mt-20"
-          style={{
-            opacity:    revealed ? 1 : 0,
-            transition: 'opacity 0.9s ease 0.6s',
-          }}
-        >
-          <a
-            href="#footer"
-            className="inline-flex items-center gap-4 px-12 py-4 text-[9px] tracking-[0.45em] uppercase font-body font-medium transition-all duration-300"
-            style={{ border: '1px solid #B08422', color: '#B08422' }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = '#B08422';
-              el.style.color      = '#FAF9F6';
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = 'transparent';
-              el.style.color      = '#B08422';
-            }}
-          >
-            Discuss Your Project →
-          </a>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function PortfolioCard({ item, index }: { item: PortfolioItem; index: number }) {
-  const [hovered, setHovered] = useState(false);
-
-  const gsId = `GS ${String(index + 1).padStart(3, '0')}`;
-
-  // Staggered reveal delay
-  const delay = `${index * 80}ms`;
-
-  return (
-    <div
-      className="relative overflow-hidden group"
-      style={{
-        aspectRatio:     index % 3 === 1 ? '3/4' : '4/3',
-        background:      '#E8E0D4',
-        animationDelay:  delay,
-        cursor:          'pointer',
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* Image */}
-      <img
-        src={item.image}
-        alt={item.title}
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{
-          transform:  hovered ? 'scale(1.07)' : 'scale(1.01)',
-          transition: 'transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-        draggable={false}
-      />
-
-      {/* Always-on overlay (subtle) */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(to top, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.15) 50%, transparent 75%)',
-        }}
-      />
-
-      {/* Hover overlay (extra dark) */}
-      <div
-        className="absolute inset-0 transition-opacity duration-500"
-        style={{ background: 'rgba(10,10,10,0.25)', opacity: hovered ? 1 : 0 }}
-      />
-
-      {/* Editorial GS identifier — top left */}
-      <div className="absolute top-5 left-5 flex items-center gap-2">
-        <span
-          className="text-[7px] tracking-[0.42em] uppercase font-body"
-          style={{ color: 'rgba(248,244,238,0.5)' }}
-        >
-          {gsId}
-        </span>
-        <span style={{ width: 16, height: 1, background: 'rgba(248,244,238,0.2)' }} />
-        <span
-          className="text-[7px] tracking-[0.4em] uppercase font-body px-2.5 py-1"
-          style={{
-            background:     'rgba(10,10,10,0.65)',
-            border:         `1px solid ${item.accent}55`,
-            color:          item.accent,
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          {item.category}
-        </span>
-      </div>
-
-      {/* Year — top right */}
-      <div className="absolute top-5 right-5">
-        <span className="text-[9px] tracking-[0.3em] font-body" style={{ color: 'rgba(248,244,238,0.4)' }}>
-          {item.year}
-        </span>
-      </div>
-
-      {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-6">
+        {/* Instruction hint */}
         <p
-          className="text-[8px] tracking-[0.38em] uppercase font-body mb-1.5"
-          style={{ color: item.accent }}
-        >
-          {item.subtitle}
-        </p>
-        <h3
-          className="font-display font-light mb-3"
           style={{
-            fontSize:   'clamp(1.2rem, 2.2vw, 1.7rem)',
-            color:      '#F8F4EE',
-            lineHeight: 1.1,
+            fontFamily:    'var(--font-body)',
+            fontSize:      '0.42rem',
+            letterSpacing: '0.35em',
+            textTransform: 'uppercase',
+            color:         'rgba(26,22,20,0.32)',
+            marginBottom:  40,
           }}
         >
-          {item.title}
-        </h3>
+          Hover to explore · Hold 5s to expand · Scroll to close
+        </p>
+      </div>
+
+      {/* ── Cascading 4-col grid ──────────────────────────────── */}
+      <div
+        style={{
+          maxWidth:  1400,
+          margin:    '0 auto',
+          padding:   '0 clamp(32px, 5vw, 80px) clamp(80px, 10vw, 120px)',
+          opacity:   revealed ? 1 : 0,
+          transform: revealed ? 'none' : 'translateY(40px)',
+          transition:'opacity 0.9s ease 0.2s, transform 0.9s ease 0.2s',
+        }}
+      >
         <div
-          className="flex flex-wrap gap-1.5 overflow-hidden transition-all duration-500"
-          style={{ maxHeight: hovered ? '40px' : '0', opacity: hovered ? 1 : 0 }}
+          style={{
+            display:             'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            columnGap:           16,
+            rowGap:              0,
+          }}
         >
-          {item.tags.map(tag => (
-            <span
-              key={tag}
-              className="text-[7px] tracking-[0.2em] uppercase font-body px-2 py-1"
-              style={{
-                background: 'rgba(255,255,255,0.07)',
-                color:      'rgba(248,244,238,0.55)',
-                border:     '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              {tag}
-            </span>
+          {filtered.map((cat, i) => (
+            <PortfolioCard
+              key={cat.id}
+              cat={cat}
+              index={i}
+              isAnyExpanded={!!expandedId}
+              onExpand={handleExpand}
+            />
           ))}
         </div>
       </div>
 
-      {/* Gold left border on hover */}
+      {/* ── Bottom CTA ───────────────────────────────────────── */}
       <div
-        className="absolute top-0 left-0 bottom-0 w-[3px] transition-all duration-500"
         style={{
-          background: `linear-gradient(to bottom, transparent, ${item.accent}, transparent)`,
-          opacity:    hovered ? 1 : 0,
+          display:        'flex',
+          justifyContent: 'center',
+          paddingBottom:  'clamp(80px, 10vw, 120px)',
+          opacity:        revealed ? 1 : 0,
+          transition:     'opacity 0.9s ease 0.6s',
         }}
-      />
-    </div>
+      >
+        <a
+          href="#footer"
+          style={{
+            display:       'inline-flex',
+            alignItems:    'center',
+            gap:           14,
+            padding:       '16px 44px',
+            fontFamily:    'var(--font-body)',
+            fontSize:      '0.44rem',
+            letterSpacing: '0.45em',
+            textTransform: 'uppercase',
+            fontWeight:    500,
+            border:        '1px solid #B08422',
+            color:         '#B08422',
+            textDecoration:'none',
+            transition:    'background 0.3s ease, color 0.3s ease',
+          }}
+          onMouseEnter={e => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.background = '#B08422';
+            el.style.color      = '#F4F0EA';
+          }}
+          onMouseLeave={e => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.background = 'transparent';
+            el.style.color      = '#B08422';
+          }}
+        >
+          Discuss Your Project
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6h8M6.5 2.5L10 6l-3.5 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+      {/* ── Expanded full-screen overlay ─────────────────────── */}
+      {expandedCat && expandFrom && (
+        <ExpandedView
+          cat={expandedCat}
+          expandFrom={expandFrom}
+          isExpanded={isExpanded}
+          onClose={handleClose}
+        />
+      )}
+    </section>
   );
 }
