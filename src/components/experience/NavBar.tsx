@@ -5,7 +5,23 @@ import { useTheme } from '@/src/hooks/useTheme';
 export function NavBar() {
   const [scrolled, setScrolled]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
+  const [liveTime, setLiveTime]   = useState('');
   const { toggle, isDark }        = useTheme();
+
+  // Live Nairobi time
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      const dd  = String(now.getUTCDate() + Math.floor((now.getUTCHours() + 3) / 24)).padStart(2, '0');
+      const mm  = String(now.getUTCMonth() + 1).padStart(2, '0');
+      const yy  = String(now.getUTCFullYear()).slice(2);
+      const h   = now.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi' });
+      setLiveTime(`NBI · ${dd}.${mm}.${yy} · ${h}`);
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80);
@@ -76,6 +92,14 @@ export function NavBar() {
             </li>
           ))}
         </ul>
+
+        {/* Live timestamp */}
+        <span
+          className="hidden lg:block text-[7px] tracking-[0.35em] uppercase font-body"
+          style={{ color: scrolled ? (isDark ? 'rgba(248,244,238,0.3)' : 'rgba(26,22,20,0.35)') : 'rgba(248,244,238,0.35)', transition: 'color 0.4s ease' }}
+        >
+          {liveTime}
+        </span>
 
         {/* Right controls */}
         <div className="hidden md:flex items-center gap-4">

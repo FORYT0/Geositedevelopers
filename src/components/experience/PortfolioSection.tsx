@@ -207,6 +207,8 @@ export function PortfolioSection() {
 function PortfolioCard({ item, index }: { item: PortfolioItem; index: number }) {
   const [hovered, setHovered] = useState(false);
 
+  const gsId = `GS ${String(index + 1).padStart(3, '0')}`;
+
   // Staggered reveal delay
   const delay = `${index * 80}ms`;
 
@@ -248,10 +250,17 @@ function PortfolioCard({ item, index }: { item: PortfolioItem; index: number }) 
         style={{ background: 'rgba(10,10,10,0.25)', opacity: hovered ? 1 : 0 }}
       />
 
-      {/* Category badge */}
-      <div className="absolute top-5 left-5">
+      {/* Editorial GS identifier — top left */}
+      <div className="absolute top-5 left-5 flex items-center gap-2">
         <span
-          className="text-[7px] tracking-[0.4em] uppercase font-body px-3 py-1.5"
+          className="text-[7px] tracking-[0.42em] uppercase font-body"
+          style={{ color: 'rgba(248,244,238,0.5)' }}
+        >
+          {gsId}
+        </span>
+        <span style={{ width: 16, height: 1, background: 'rgba(248,244,238,0.2)' }} />
+        <span
+          className="text-[7px] tracking-[0.4em] uppercase font-body px-2.5 py-1"
           style={{
             background:     'rgba(10,10,10,0.65)',
             border:         `1px solid ${item.accent}55`,
@@ -263,7 +272,7 @@ function PortfolioCard({ item, index }: { item: PortfolioItem; index: number }) 
         </span>
       </div>
 
-      {/* Year */}
+      {/* Year — top right */}
       <div className="absolute top-5 right-5">
         <span className="text-[9px] tracking-[0.3em] font-body" style={{ color: 'rgba(248,244,238,0.4)' }}>
           {item.year}

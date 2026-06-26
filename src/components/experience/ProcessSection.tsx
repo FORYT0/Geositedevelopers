@@ -3,272 +3,345 @@ import { useEffect, useRef, useState } from 'react';
 
 const STEPS = [
   {
-    number: '01',
-    title: 'Discovery',
-    subtitle: 'Understanding Your Vision',
-    description:
-      'We begin with an in-depth consultation to understand your lifestyle, aesthetic preferences, and spatial goals. Every detail matters — from morning rituals to entertaining habits.',
-    image: '/renders/Blue Spiral Hotel Ground full render.png',
+    number:      '01',
+    title:       'Discovery',
+    subtitle:    'Understanding Your Vision',
+    description: 'We begin with an in-depth consultation to understand your lifestyle, aesthetic preferences, and spatial goals. Every detail matters — from morning rituals to entertaining habits.',
+    image:       '/renders/Blue Spiral Hotel Ground full render.png',
   },
   {
-    number: '02',
-    title: 'Concept',
-    subtitle: 'Design Proposals',
-    description:
-      'Our designers craft multiple bespoke concepts tailored specifically to your space. You receive mood boards, material palettes, and layout options — each a distinct design narrative.',
-    image: '/renders/Blue Spiral Hotel Render.jpg',
+    number:      '02',
+    title:       'Concept',
+    subtitle:    'Design Proposals',
+    description: 'Our designers craft multiple bespoke concepts tailored specifically to your space. You receive mood boards, material palettes, and layout options — each a distinct design narrative.',
+    image:       '/renders/Blue Spiral Hotel Render.jpg',
   },
   {
-    number: '03',
-    title: 'Visualise',
-    subtitle: '3D & BIM Rendering',
-    description:
-      'Walk through photorealistic 3D renders and BIM models of your space before a single nail is hammered. Experience your new home virtually — lighting, materials, and all.',
-    image: '/renders/Luxurious presidential suite Infinity feel 1.png',
+    number:      '03',
+    title:       'Visualise',
+    subtitle:    '3D & BIM Rendering',
+    description: 'Walk through photorealistic 3D renders and BIM models of your space before a single nail is hammered. Experience your new home virtually — lighting, materials, and all.',
+    image:       '/renders/Luxurious presidential suite Infinity feel 1.png',
   },
   {
-    number: '04',
-    title: 'Deliver',
-    subtitle: 'Flawless Execution',
-    description:
-      'Our trusted network of craftsmen and project managers bring the vision to life with surgical precision. We handle procurement, installation, and final styling — you simply arrive.',
-    image: '/renders/Blue Spiral Hotel Entrance Final.png',
+    number:      '04',
+    title:       'Deliver',
+    subtitle:    'Flawless Execution',
+    description: 'Our trusted network of craftsmen and project managers bring the vision to life with surgical precision. We handle procurement, installation, and final styling — you simply arrive.',
+    image:       '/renders/Blue Spiral Hotel Entrance Final.png',
   },
 ];
 
 export function ProcessSection() {
-  const [active, setActive]     = useState(0);
+  const [active,   setActive]   = useState(0);
   const [revealed, setRevealed] = useState(false);
   const sectionRef              = useRef<HTMLElement>(null);
-  const intervalRef             = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setRevealed(true); },
-      { threshold: 0.1 }
+      { threshold: 0.06 }
     );
     if (sectionRef.current) obs.observe(sectionRef.current);
     return () => obs.disconnect();
   }, []);
 
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setActive(a => (a + 1) % STEPS.length);
-    }, 4000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, []);
-
-  const pick = (i: number) => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    setActive(i);
-  };
-
-  const step = STEPS[active];
-
   return (
     <section
       id="process"
       ref={sectionRef}
-      className="relative w-full py-32 md:py-40 overflow-hidden"
-      style={{ background: '#FAF9F6' }}
+      style={{ background: '#0B0B09', position: 'relative', overflow: 'hidden' }}
     >
-      {/* Subtle dot grid */}
+      {/* Very subtle noise texture overlay */}
       <div
-        className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(circle, rgba(176,132,34,0.08) 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
+          position:   'absolute',
+          inset:      0,
+          pointerEvents: 'none',
+          background: 'radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.04) 0%, transparent 65%)',
         }}
       />
 
-      <div className="max-w-[1400px] mx-auto px-8 md:px-16 relative">
-
-        {/* Section header */}
+      <div
+        style={{
+          maxWidth: 1400,
+          margin:   '0 auto',
+          padding:  'clamp(80px, 10vw, 140px) clamp(24px, 5vw, 80px)',
+          position: 'relative',
+        }}
+      >
+        {/* ── Section header ────────────────────────────── */}
         <div
-          className="mb-20"
           style={{
-            opacity:    revealed ? 1 : 0,
-            transform:  revealed ? 'translateY(0)' : 'translateY(30px)',
-            transition: 'opacity 0.9s ease, transform 0.9s ease',
+            marginBottom: 72,
+            opacity:      revealed ? 1 : 0,
+            transform:    revealed ? 'translateY(0)' : 'translateY(24px)',
+            transition:   'opacity 0.9s ease, transform 0.9s ease',
           }}
         >
-          <div className="flex items-center gap-4 mb-5">
-            <div className="gold-line" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+            <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)' }} />
             <span
-              className="text-[9px] tracking-[0.55em] uppercase font-body"
-              style={{ color: 'var(--gold)' }}
+              style={{
+                fontFamily:    'var(--font-body)',
+                fontSize:      '0.52rem',
+                letterSpacing: '0.55em',
+                textTransform: 'uppercase',
+                color:         '#C9A84C',
+              }}
             >
               How We Work
             </span>
           </div>
           <h2
-            className="font-display font-light"
             style={{
-              fontSize:      'clamp(2.4rem, 5vw, 5rem)',
-              color:         '#1A1614',
-              letterSpacing: '-0.02em',
-              lineHeight:    0.95,
+              fontFamily:    'var(--font-display)',
+              fontWeight:    300,
+              fontSize:      'clamp(2.6rem, 5.5vw, 6rem)',
+              color:         '#F8F4EE',
+              letterSpacing: '-0.03em',
+              lineHeight:    0.91,
             }}
           >
             Our Design
             <br />
-            <em style={{ color: 'var(--gold-light)', fontStyle: 'italic' }}>Process</em>
+            <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>Process</em>
           </h2>
         </div>
 
-        {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-
-          {/* Left: image */}
+        {/* ── Main grid ─────────────────────────────────── */}
+        <div
+          style={{
+            display:             'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap:                 80,
+            alignItems:          'start',
+          }}
+        >
+          {/* ── Left: large numbered list ─────────────── */}
           <div
-            className="relative overflow-hidden"
-            style={{
-              aspectRatio: '4/3',
-              opacity:    revealed ? 1 : 0,
-              transform:  revealed ? 'translateX(0)' : 'translateX(-30px)',
-              transition: 'opacity 0.9s ease 0.15s, transform 0.9s ease 0.15s',
-            }}
-          >
-            {STEPS.map((s, i) => (
-              <img
-                key={s.number}
-                src={s.image}
-                alt={s.title}
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{
-                  opacity:    i === active ? 1 : 0,
-                  transition: 'opacity 0.8s ease',
-                  transform:  i === active ? 'scale(1.02)' : 'scale(1)',
-                }}
-              />
-            ))}
-
-            {/* Step badge */}
-            <div
-              className="absolute top-6 left-6 flex items-center gap-3 px-5 py-3"
-              style={{
-                background:     'rgba(8,8,8,0.78)',
-                border:         '1px solid rgba(201,168,76,0.3)',
-                backdropFilter: 'blur(12px)',
-              }}
-            >
-              <span
-                className="font-display text-3xl font-light"
-                style={{ color: '#C9A84C', lineHeight: 1 }}
-              >
-                {step.number}
-              </span>
-              <div style={{ width: 1, height: 20, background: 'rgba(201,168,76,0.3)' }} />
-              <span
-                className="text-[8px] tracking-[0.45em] uppercase font-body"
-                style={{ color: 'rgba(248,244,238,0.75)' }}
-              >
-                {step.subtitle}
-              </span>
-            </div>
-
-            {/* Gold corner accent */}
-            <div className="absolute bottom-0 right-0 w-16 h-16" style={{ borderTop: '2px solid #C9A84C', borderLeft: '2px solid #C9A84C', opacity: 0.4 }} />
-          </div>
-
-          {/* Right: step accordion */}
-          <div
-            className="flex flex-col gap-1"
             style={{
               opacity:    revealed ? 1 : 0,
-              transform:  revealed ? 'translateX(0)' : 'translateX(30px)',
-              transition: 'opacity 0.9s ease 0.3s, transform 0.9s ease 0.3s',
+              transition: 'opacity 0.9s ease 0.18s',
             }}
           >
-            {STEPS.map((s, i) => {
+            {STEPS.map((step, i) => {
               const isActive = i === active;
               return (
-                <button
-                  key={s.number}
-                  onClick={() => pick(i)}
-                  className="relative text-left transition-all duration-400 overflow-hidden"
-                  style={{
-                    padding:    isActive ? '20px 24px' : '16px 24px',
-                    background: isActive ? 'rgba(176,132,34,0.06)' : 'transparent',
-                    border:     isActive ? '1px solid rgba(176,132,34,0.2)' : '1px solid transparent',
-                    borderLeft: isActive ? '3px solid #B08422' : '3px solid transparent',
-                  }}
+                <div
+                  key={step.number}
+                  style={{ position: 'relative', cursor: 'pointer' }}
+                  onMouseEnter={() => setActive(i)}
+                  onClick={() => setActive(i)}
                 >
-                  {/* Progress bar */}
-                  {isActive && (
+                  {/* Top border */}
+                  <div style={{ position: 'relative', height: 1, background: 'rgba(248,244,238,0.08)' }}>
+                    {/* Gold progress line that expands when active */}
                     <div
-                      className="absolute bottom-0 left-0 h-[2px]"
-                      style={{ background: '#B08422', animation: 'progress-step 4s linear forwards' }}
-                    />
-                  )}
-
-                  <div className="flex items-start gap-5">
-                    <span
-                      className="font-display font-light flex-shrink-0 mt-0.5"
                       style={{
-                        fontSize:   'clamp(1.5rem, 2.5vw, 2.1rem)',
-                        color:      isActive ? '#B08422' : '#CCC4B8',
-                        lineHeight: 1,
-                        transition: 'color 0.3s ease',
+                        position:   'absolute',
+                        top:        0,
+                        left:       0,
+                        height:     1,
+                        width:      isActive ? '100%' : '0%',
+                        background: '#C9A84C',
+                        transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
-                    >
-                      {s.number}
-                    </span>
+                    />
+                  </div>
 
-                    <div className="flex-1">
-                      <h3
-                        className="font-display font-medium mb-0.5"
+                  <div style={{ padding: '28px 0 28px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 20 }}>
+                        {/* Number */}
+                        <span
+                          style={{
+                            fontFamily:    'var(--font-body)',
+                            fontSize:      '0.5rem',
+                            letterSpacing: '0.38em',
+                            textTransform: 'uppercase',
+                            color:         '#C9A84C',
+                            flexShrink:    0,
+                            paddingTop:    4,
+                          }}
+                        >
+                          {step.number}
+                        </span>
+
+                        {/* Title */}
+                        <h3
+                          style={{
+                            fontFamily:    'var(--font-display)',
+                            fontWeight:    300,
+                            fontSize:      'clamp(2rem, 3.2vw, 4.2rem)',
+                            color:         isActive ? '#F8F4EE' : 'rgba(248,244,238,0.18)',
+                            lineHeight:    1.02,
+                            letterSpacing: '-0.025em',
+                            transition:    'color 0.45s ease',
+                          }}
+                        >
+                          {step.title}
+                        </h3>
+                      </div>
+
+                      {/* Expandable description */}
+                      <div
                         style={{
-                          fontSize:   'clamp(1.1rem, 1.8vw, 1.5rem)',
-                          color:      isActive ? '#1A1614' : '#6B5F55',
-                          lineHeight: 1.1,
-                          transition: 'color 0.3s ease',
+                          overflow:   'hidden',
+                          maxHeight:  isActive ? '140px' : '0px',
+                          transition: 'max-height 0.55s cubic-bezier(0.16, 1, 0.3, 1)',
                         }}
                       >
-                        {s.title}
-                      </h3>
-
-                      <div
-                        className="overflow-hidden transition-all duration-500"
-                        style={{ maxHeight: isActive ? '120px' : '0' }}
-                      >
                         <p
-                          className="font-body font-light text-sm leading-relaxed mt-2"
-                          style={{ color: '#7A6E60', lineHeight: 1.85 }}
+                          style={{
+                            fontFamily: 'var(--font-body)',
+                            fontSize:   '0.82rem',
+                            lineHeight: 1.9,
+                            color:      'rgba(248,244,238,0.42)',
+                            marginTop:  14,
+                            paddingLeft: 40,
+                            maxWidth:   480,
+                          }}
                         >
-                          {s.description}
+                          {step.description}
                         </p>
                       </div>
                     </div>
 
+                    {/* Arrow */}
                     <span
-                      className="flex-shrink-0 transition-all duration-300 mt-1"
                       style={{
-                        color:     '#B08422',
-                        opacity:   isActive ? 1 : 0,
-                        transform: isActive ? 'translateX(0)' : 'translateX(-8px)',
-                        fontSize:  17,
+                        fontFamily: 'var(--font-body)',
+                        fontSize:   '1.25rem',
+                        color:      '#C9A84C',
+                        opacity:    isActive ? 1 : 0,
+                        transform:  isActive ? 'translateX(0)' : 'translateX(-12px)',
+                        transition: 'opacity 0.35s ease, transform 0.35s ease',
+                        paddingTop: 6,
+                        flexShrink: 0,
                       }}
                     >
                       →
                     </span>
                   </div>
-                </button>
+                </div>
               );
             })}
 
-            <div className="mt-6 pl-6">
+            {/* Final border */}
+            <div style={{ height: 1, background: 'rgba(248,244,238,0.08)' }} />
+
+            {/* CTA */}
+            <div style={{ marginTop: 44 }}>
               <a
                 href="#footer"
-                className="inline-flex items-center gap-3 text-[9px] tracking-[0.4em] uppercase font-body font-medium transition-all duration-300"
-                style={{ color: '#B08422' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.gap = '20px'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.gap = '12px'; }}
+                style={{
+                  display:        'inline-flex',
+                  alignItems:     'center',
+                  gap:            14,
+                  fontFamily:     'var(--font-body)',
+                  fontSize:       '0.52rem',
+                  letterSpacing:  '0.42em',
+                  textTransform:  'uppercase',
+                  color:          '#C9A84C',
+                  textDecoration: 'none',
+                  transition:     'gap 0.3s ease',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.gap = '22px'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.gap = '14px'; }}
               >
                 Start Your Project
-                <span className="block h-px" style={{ width: 40, background: '#B08422' }} />
+                <span style={{ display: 'block', width: 44, height: 1, background: '#C9A84C' }} />
               </a>
             </div>
+          </div>
+
+          {/* ── Right: sticky image panel ─────────────── */}
+          <div
+            style={{
+              position:   'sticky',
+              top:        100,
+              overflow:   'hidden',
+              aspectRatio:'4/3',
+              opacity:    revealed ? 1 : 0,
+              transition: 'opacity 0.9s ease 0.35s',
+            }}
+          >
+            {STEPS.map((step, i) => (
+              <img
+                key={step.number}
+                src={step.image}
+                alt={step.title}
+                draggable={false}
+                style={{
+                  position:       'absolute',
+                  inset:          0,
+                  width:          '100%',
+                  height:         '100%',
+                  objectFit:      'cover',
+                  objectPosition: 'center',
+                  opacity:        i === active ? 1 : 0,
+                  transition:     'opacity 0.75s ease',
+                  transform:      i === active ? 'scale(1.02)' : 'scale(1)',
+                }}
+              />
+            ))}
+
+            {/* Step label overlay at bottom */}
+            <div
+              style={{
+                position:   'absolute',
+                bottom:     0,
+                left:       0,
+                right:      0,
+                padding:    '20px 24px',
+                background: 'linear-gradient(to top, rgba(11,11,9,0.95), transparent)',
+                display:    'flex',
+                alignItems: 'center',
+                gap:        14,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily:    'var(--font-display)',
+                  fontSize:      '2.2rem',
+                  fontWeight:    300,
+                  color:         '#C9A84C',
+                  lineHeight:    1,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {STEPS[active].number}
+              </span>
+              <div style={{ width: 1, height: 22, background: 'rgba(201,168,76,0.35)' }} />
+              <div>
+                <span
+                  style={{
+                    fontFamily:    'var(--font-body)',
+                    fontSize:      '0.48rem',
+                    letterSpacing: '0.4em',
+                    textTransform: 'uppercase',
+                    color:         '#F8F4EE',
+                    opacity:       0.7,
+                  }}
+                >
+                  {STEPS[active].subtitle}
+                </span>
+              </div>
+            </div>
+
+            {/* Gold corner accent */}
+            <div
+              style={{
+                position:    'absolute',
+                top:         20,
+                right:       20,
+                width:       40,
+                height:      40,
+                borderBottom: '1px solid rgba(201,168,76,0.4)',
+                borderLeft:  '1px solid rgba(201,168,76,0.4)',
+              }}
+            />
           </div>
         </div>
       </div>

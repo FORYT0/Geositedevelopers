@@ -67,6 +67,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Custom cursor — hide default on pointer devices ─────────────────────── */
+@media (pointer: fine) {
+  *, *::before, *::after { cursor: none !important; }
+}
+
 /* ── Scrollbar ────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--charcoal-mid); }

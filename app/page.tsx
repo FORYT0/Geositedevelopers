@@ -1,5 +1,6 @@
 'use client';
 import { NavBar }             from '@/src/components/experience/NavBar';
+import { CustomCursor }       from '@/src/components/experience/CustomCursor';
 import { LandingSection }     from '@/src/components/experience/LandingSection';
 import { ProcessSection }     from '@/src/components/experience/ProcessSection';
 import { BeforeAfterSection } from '@/src/components/experience/BeforeAfterSection';
@@ -12,6 +13,7 @@ import { FooterSection }      from '@/src/components/experience/FooterSection';
 export default function Home() {
   return (
     <div className="relative" style={{ background: 'var(--charcoal)' }}>
+      <CustomCursor />
       <NavBar />
       <LandingSection />
       <ProcessSection />
