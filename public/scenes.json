@@ -1,0 +1,181 @@
+{
+  "scenes": [
+    {
+      "id": "tower-exterior-01",
+      "title": "Tower Exterior",
+      "category": "exterior",
+      "modelPath": "/models/tower-exterior-01.glb",
+      "thumbnailPath": "/thumbnails/tower-exterior-01.jpg",
+      "cameraPath": [
+        {
+          "scrollProgress": 0,
+          "position": [
+            0,
+            5,
+            20
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "scrollProgress": 0.5,
+          "position": [
+            10,
+            10,
+            10
+          ],
+          "target": [
+            0,
+            3,
+            0
+          ],
+          "easing": "easeInOut"
+        },
+        {
+          "scrollProgress": 1,
+          "position": [
+            0,
+            15,
+            5
+          ],
+          "target": [
+            0,
+            5,
+            0
+          ],
+          "easing": "easeInOut"
+        }
+      ],
+      "interactiveElements": [
+        {
+          "meshName": "Door_Main",
+          "animationClipName": "Door_Open",
+          "reverseClipName": "Door_Close"
+        }
+      ],
+      "lightingPresets": [
+        {
+          "id": "day",
+          "label": "Day",
+          "envMapPath": "/env/day.hdr",
+          "ambientIntensity": 0.5,
+          "directionalLights": [
+            {
+              "intensity": 1.5,
+              "position": [
+                10,
+                20,
+                10
+              ],
+              "color": "#ffffff"
+            }
+          ]
+        },
+        {
+          "id": "night",
+          "label": "Night",
+          "envMapPath": "/env/night.hdr",
+          "ambientIntensity": 0.1,
+          "directionalLights": [
+            {
+              "intensity": 0.3,
+              "position": [
+                5,
+                10,
+                5
+              ],
+              "color": "#aabbff"
+            }
+          ]
+        }
+      ],
+      "defaultLightingPreset": "day"
+    },
+    {
+      "id": "villa-interior-01",
+      "title": "Villa Interior",
+      "category": "interior",
+      "modelPath": "/models/villa-interior-01.glb",
+      "thumbnailPath": "/thumbnails/villa-interior-01.jpg",
+      "cameraPath": [
+        {
+          "scrollProgress": 0,
+          "position": [
+            0,
+            1.7,
+            0
+          ],
+          "target": [
+            0,
+            1.7,
+            -5
+          ]
+        },
+        {
+          "scrollProgress": 0.5,
+          "position": [
+            0,
+            1.7,
+            -8
+          ],
+          "target": [
+            0,
+            1.7,
+            -13
+          ]
+        },
+        {
+          "scrollProgress": 1,
+          "position": [
+            0,
+            1.7,
+            -16
+          ],
+          "target": [
+            0,
+            1.7,
+            -21
+          ]
+        }
+      ],
+      "interactiveElements": [
+        {
+          "meshName": "Cabinet_Door",
+          "animationClipName": "Cabinet_Open",
+          "reverseClipName": "Cabinet_Close"
+        }
+      ],
+      "lightingPresets": [
+        {
+          "id": "interior-day",
+          "label": "Daytime",
+          "ambientIntensity": 0.4,
+          "directionalLights": [
+            {
+              "intensity": 1,
+              "position": [
+                0,
+                5,
+                0
+              ],
+              "color": "#fff5e0"
+            },
+            {
+              "intensity": 0.5,
+              "position": [
+                3,
+                3,
+                -5
+              ],
+              "color": "#ffffff"
+            }
+          ]
+        }
+      ],
+      "defaultLightingPreset": "interior-day"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+﻿{
+  "type": "object",
+  "required": ["scenes"],
+  "properties": {
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "category", "modelPath", "thumbnailPath", "cameraPath", "interactiveElements", "lightingPresets", "defaultLightingPreset"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "category": { "type": "string", "enum": ["exterior", "interior"] },
+          "modelPath": { "type": "string", "pattern": "\\.(glb|gltf)$" },
+          "thumbnailPath": { "type": "string", "minLength": 1 },
+          "cameraPath": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "required": ["scrollProgress", "position", "target"],
+              "properties": {
+                "scrollProgress": { "type": "number", "minimum": 0, "maximum": 1 },
+                "position": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+                "target": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+                "easing": { "type": "string", "enum": ["linear", "easeIn", "easeOut", "easeInOut"] }
+              }
+            }
+          },
+          "interactiveElements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["meshName", "animationClipName"],
+              "properties": {
+                "meshName": { "type": "string", "minLength": 1 },
+                "animationClipName": { "type": "string", "minLength": 1 },
+                "reverseClipName": { "type": "string" }
+              }
+            }
+          },
+          "lightingPresets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["id", "label", "ambientIntensity", "directionalLights"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "label": { "type": "string", "minLength": 1 },
+                "envMapPath": { "type": "string" },
+                "ambientIntensity": { "type": "number" },
+                "directionalLights": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["intensity", "position"],
+                    "properties": {
+                      "intensity": { "type": "number" },
+                      "position": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+                      "color": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "defaultLightingPreset": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,224 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Montserrat:wght@200;300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Brand Tokens — Dark (default) ───────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  --gold:          #C9A84C;
+  --gold-light:    #E8C97A;
+  --gold-pale:     #F5E6C0;
+  --charcoal:      #0D0D0D;
+  --charcoal-mid:  #1A1A1A;
+  --charcoal-soft: #2A2A2A;
+  --warm-white:    #F8F4EE;
+  --cream:         #EDE8DF;
+  --text-muted:    #8A8070;
+  --surface:       #141414;
+  --surface-2:     #1E1E1E;
+  --border:        rgba(201,168,76,0.15);
+
+  --font-display:  'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --font-body:     'Montserrat', 'Helvetica Neue', sans-serif;
+}
+
+/* ── Brand Tokens — Light ─────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --gold:          #B08422;
+  --gold-light:    #C9962A;
+  --gold-pale:     #DDB040;
+  --charcoal:      #FAFAF8;
+  --charcoal-mid:  #F2EDE6;
+  --charcoal-soft: #E8E0D4;
+  --warm-white:    #1C1814;
+  --cream:         #2C2420;
+  --text-muted:    #7A6E60;
+  --surface:       #F5F1EA;
+  --surface-2:     #ECE6DB;
+  --border:        rgba(176,132,34,0.2);
+
+  --font-display:  'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --font-body:     'Montserrat', 'Helvetica Neue', sans-serif;
+}
+
+/* ── Reset ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--charcoal);
+  color: var(--warm-white);
+  font-family: var(--font-body);
+  font-weight: 300;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--charcoal); }
+::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
+/* ── Selection ────────────────────────────────────────────────────────────── */
+::selection {
+  background: var(--gold);
+  color: var(--charcoal);
+}
+
+/* ── Typography ───────────────────────────────────────────────────────────── */
+.font-display { font-family: var(--font-display); }
+.font-body    { font-family: var(--font-body); }
+
+/* ── Gold gradient text ───────────────────────────────────────────────────── */
+.text-gold-gradient {
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-pale) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glassmorphism ────────────────────────────────────────────────────────── */
+.glass {
+  background: rgba(13, 13, 13, 0.55);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(201, 168, 76, 0.25);
+}
+
+[data-theme="light"] .glass {
+  background: rgba(250, 248, 244, 0.75);
+  border: 1px solid rgba(176, 132, 34, 0.25);
+}
+
+.glass-light {
+  background: rgba(248, 244, 238, 0.08);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+}
+
+/* ── Scroll-reveal ────────────────────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Stagger children ─────────────────────────────────────────────────────── */
+.stagger > *:nth-child(1) { transition-delay: 0ms; }
+.stagger > *:nth-child(2) { transition-delay: 100ms; }
+.stagger > *:nth-child(3) { transition-delay: 200ms; }
+.stagger > *:nth-child(4) { transition-delay: 300ms; }
+.stagger > *:nth-child(5) { transition-delay: 400ms; }
+
+/* ── Theme transition — only applies to theme-sensitive properties ─────────── */
+nav, footer, section, header, aside, main, div, span, p, h1, h2, h3, h4, a, button, input {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+
+/* ── Horizontal scroll container ─────────────────────────────────────────── */
+.horizontal-scroll {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.horizontal-scroll::-webkit-scrollbar { display: none; }
+.horizontal-scroll > * { scroll-snap-align: start; flex-shrink: 0; }
+
+/* ── Hotspot pulse ────────────────────────────────────────────────────────── */
+@keyframes hotspot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.4); opacity: 0.6; }
+}
+@keyframes hotspot-ring {
+  0%   { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ── General pulse animation for glowing hotspots ───────────────────────────── */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.5;
+  }
+}
+
+.hotspot-dot {
+  animation: hotspot-pulse 2.4s ease-in-out infinite;
+}
+.hotspot-ring {
+  animation: hotspot-ring 2.4s ease-out infinite;
+}
+
+/* ── Scroll-driven zoom ───────────────────────────────────────────────────── */
+.zoom-image {
+  will-change: transform;
+  transform-origin: center center;
+}
+
+/* ── Marquee ──────────────────────────────────────────────────────────────── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 28s linear infinite;
+  display: flex;
+  width: max-content;
+}
+.marquee-track:hover { animation-play-state: paused; }
+
+/* ── Fade in up ───────────────────────────────────────────────────────────── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Gold line ────────────────────────────────────────────────────────────── */
+.gold-line {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+/* ── Card hover lift ──────────────────────────────────────────────────────── */
+.card-lift {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(201, 168, 76, 0.3);
+}
+
+/* ── Cursor ───────────────────────────────────────────────────────────────── */
+.cursor-gold { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='5' fill='%23C9A84C'/%3E%3C/svg%3E") 12 12, pointer; }
