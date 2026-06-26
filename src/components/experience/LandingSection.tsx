@@ -19,7 +19,6 @@ export function LandingSection() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Cross-fade image rotator
   useEffect(() => {
     const id = setInterval(() => {
       setImgIndex(i => (i + 1) % HERO_IMAGES.length);
@@ -27,69 +26,109 @@ export function LandingSection() {
     return () => clearInterval(id);
   }, []);
 
+  const anim = (delay: number) => ({
+    opacity:    mounted ? 1 : 0,
+    transform:  mounted ? 'translateY(0)' : 'translateY(22px)',
+    transition: `opacity 1s ease ${delay}s, transform 1s ease ${delay}s`,
+  });
+
   return (
     <section
       id="landing"
-      className="relative w-full overflow-hidden"
-      style={{ height: '100vh', minHeight: 640 }}
+      style={{
+        position:   'relative',
+        width:      '100%',
+        height:     '100vh',
+        minHeight:  640,
+        overflow:   'hidden',
+      }}
     >
-      {/* ── Background images ──────────────────────────────────────── */}
+      {/* ── Background images ──────────────────────────────────── */}
       {HERO_IMAGES.map((src, i) => (
         <img
           key={src}
           src={src}
           alt="Geosite DEVELOPERS Interior Design"
-          className="absolute inset-0 w-full h-full object-cover object-center"
           draggable={false}
           style={{
-            opacity: i === imgIndex ? 1 : 0,
+            position:   'absolute',
+            top:        0,
+            left:       0,
+            width:      '100%',
+            height:     '100%',
+            objectFit:  'cover',
+            objectPosition: 'center',
+            opacity:    i === imgIndex ? 1 : 0,
             transition: 'opacity 1.6s ease',
+            zIndex:     i === imgIndex ? 1 : 0,
           }}
         />
       ))}
 
-      {/* ── Dark overlay ───────────────────────────────────────────── */}
+      {/* ── Dark overlay ─────────────────────────────────────────── */}
       <div
-        className="absolute inset-0"
         style={{
-          background:
-            'linear-gradient(to bottom, rgba(8,8,8,0.5) 0%, rgba(8,8,8,0.25) 40%, rgba(8,8,8,0.72) 100%)',
+          position:   'absolute',
+          inset:      0,
+          zIndex:     2,
+          background: 'linear-gradient(to bottom, rgba(8,8,8,0.5) 0%, rgba(8,8,8,0.18) 40%, rgba(8,8,8,0.75) 100%)',
         }}
       />
 
-      {/* ── Hero content ───────────────────────────────────────────── */}
-      <div className="absolute inset-0 flex flex-col justify-center items-center px-6 text-center">
-
+      {/* ── Hero content (centered) ───────────────────────────────── */}
+      <div
+        style={{
+          position:       'absolute',
+          top:            0,
+          left:           0,
+          right:          0,
+          bottom:         0,
+          zIndex:         3,
+          display:        'flex',
+          flexDirection:  'column',
+          justifyContent: 'center',
+          alignItems:     'center',
+          textAlign:      'center',
+          padding:        '0 24px',
+          paddingBottom:  '120px', // leave room for stats at bottom
+        }}
+      >
         {/* Eyebrow */}
         <div
-          className="flex items-center gap-4 mb-8"
           style={{
-            opacity:    mounted ? 1 : 0,
-            transform:  mounted ? 'translateY(0)' : 'translateY(18px)',
-            transition: 'opacity 0.9s ease 0.2s, transform 0.9s ease 0.2s',
+            display:        'flex',
+            alignItems:     'center',
+            gap:            16,
+            marginBottom:   32,
+            ...anim(0.2),
           }}
         >
-          <div className="gold-line" />
+          <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)' }} />
           <span
-            className="text-[9px] tracking-[0.55em] uppercase font-body"
-            style={{ color: '#C9A84C' }}
+            style={{
+              fontFamily:     'var(--font-body)',
+              fontSize:       '0.55rem',
+              letterSpacing:  '0.55em',
+              textTransform:  'uppercase',
+              color:          '#C9A84C',
+            }}
           >
             Interior Design Studio · Nairobi, Kenya
           </span>
-          <div className="gold-line" />
+          <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)' }} />
         </div>
 
         {/* Headline */}
         <h1
-          className="font-display font-light mb-6"
           style={{
-            fontSize:   'clamp(3.5rem, 8.5vw, 9rem)',
-            color:      '#F8F4EE',
-            letterSpacing: '-0.025em',
-            lineHeight: 0.93,
-            opacity:    mounted ? 1 : 0,
-            transform:  mounted ? 'translateY(0)' : 'translateY(28px)',
-            transition: 'opacity 1s ease 0.38s, transform 1s ease 0.38s',
+            fontFamily:     'var(--font-display)',
+            fontWeight:     300,
+            fontSize:       'clamp(3.5rem, 8.5vw, 9rem)',
+            color:          '#F8F4EE',
+            letterSpacing:  '-0.025em',
+            lineHeight:     0.93,
+            marginBottom:   24,
+            ...anim(0.4),
           }}
         >
           Spaces That
@@ -99,35 +138,47 @@ export function LandingSection() {
 
         {/* Subtitle */}
         <p
-          className="font-body font-light max-w-xl mb-12"
           style={{
-            fontSize:      'clamp(0.82rem, 1.25vw, 0.98rem)',
-            color:         'rgba(248,244,238,0.68)',
-            letterSpacing: '0.08em',
-            lineHeight:    2,
-            opacity:       mounted ? 1 : 0,
-            transform:     mounted ? 'translateY(0)' : 'translateY(20px)',
-            transition:    'opacity 1s ease 0.56s, transform 1s ease 0.56s',
+            fontFamily:     'var(--font-body)',
+            fontWeight:     300,
+            fontSize:       'clamp(0.8rem, 1.2vw, 0.95rem)',
+            color:          'rgba(248,244,238,0.68)',
+            letterSpacing:  '0.08em',
+            lineHeight:     2,
+            maxWidth:       540,
+            marginBottom:   48,
+            ...anim(0.58),
           }}
         >
           Crafting extraordinary interiors through bespoke design,
-          <br className="hidden sm:block" />
           BIM technology, and timeless elegance.
         </p>
 
         {/* CTAs */}
         <div
-          className="flex flex-col sm:flex-row items-center gap-4"
           style={{
-            opacity:    mounted ? 1 : 0,
-            transform:  mounted ? 'translateY(0)' : 'translateY(16px)',
-            transition: 'opacity 1s ease 0.72s, transform 1s ease 0.72s',
+            display:     'flex',
+            flexWrap:    'wrap',
+            gap:         16,
+            justifyContent: 'center',
+            ...anim(0.74),
           }}
         >
           <a
             href="#portfolio"
-            className="px-10 py-3.5 text-[9px] tracking-[0.4em] uppercase font-body font-medium"
-            style={{ background: '#C9A84C', color: '#0D0D0D' }}
+            style={{
+              display:        'inline-block',
+              padding:        '14px 40px',
+              fontFamily:     'var(--font-body)',
+              fontSize:       '0.56rem',
+              letterSpacing:  '0.4em',
+              textTransform:  'uppercase',
+              fontWeight:     500,
+              background:     '#C9A84C',
+              color:          '#0D0D0D',
+              textDecoration: 'none',
+              transition:     'background 0.3s ease',
+            }}
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = '#E8C97A')}
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = '#C9A84C')}
           >
@@ -135,8 +186,19 @@ export function LandingSection() {
           </a>
           <a
             href="#process"
-            className="px-10 py-3.5 text-[9px] tracking-[0.4em] uppercase font-body font-medium transition-all duration-300"
-            style={{ border: '1px solid rgba(248,244,238,0.4)', color: 'rgba(248,244,238,0.85)' }}
+            style={{
+              display:        'inline-block',
+              padding:        '14px 40px',
+              fontFamily:     'var(--font-body)',
+              fontSize:       '0.56rem',
+              letterSpacing:  '0.4em',
+              textTransform:  'uppercase',
+              fontWeight:     500,
+              border:         '1px solid rgba(248,244,238,0.4)',
+              color:          'rgba(248,244,238,0.85)',
+              textDecoration: 'none',
+              transition:     'border-color 0.3s ease, color 0.3s ease',
+            }}
             onMouseEnter={e => {
               const el = e.currentTarget as HTMLElement;
               el.style.borderColor = '#C9A84C';
@@ -153,36 +215,55 @@ export function LandingSection() {
         </div>
       </div>
 
-      {/* ── Stats strip ────────────────────────────────────────────── */}
+      {/* ── Stats strip (absolute bottom) ────────────────────────── */}
       <div
-        className="absolute bottom-10 left-0 right-0 flex items-end justify-center gap-0 px-8"
         style={{
-          opacity:    mounted ? 1 : 0,
-          transition: 'opacity 1s ease 1.1s',
+          position:       'absolute',
+          bottom:         40,
+          left:           0,
+          right:          0,
+          zIndex:         4,
+          display:        'flex',
+          justifyContent: 'center',
+          alignItems:     'flex-end',
+          gap:            0,
+          padding:        '0 32px',
+          opacity:        mounted ? 1 : 0,
+          transition:     'opacity 1s ease 1.1s',
         }}
       >
         {STATS.map((stat, i) => (
           <div
             key={stat.label}
-            className="flex flex-col items-center gap-1.5 px-8 md:px-14"
             style={{
-              borderLeft: i > 0 ? '1px solid rgba(201,168,76,0.25)' : 'none',
+              display:        'flex',
+              flexDirection:  'column',
+              alignItems:     'center',
+              gap:            6,
+              padding:        '0 40px',
+              borderLeft:     i > 0 ? '1px solid rgba(201,168,76,0.25)' : 'none',
             }}
           >
             <span
-              className="font-display font-light"
               style={{
-                fontSize:      'clamp(1.7rem, 3vw, 2.6rem)',
-                color:         '#C9A84C',
-                lineHeight:    1,
-                letterSpacing: '-0.01em',
+                fontFamily:     'var(--font-display)',
+                fontWeight:     300,
+                fontSize:       'clamp(1.7rem, 3vw, 2.6rem)',
+                color:          '#C9A84C',
+                lineHeight:     1,
+                letterSpacing:  '-0.01em',
               }}
             >
               {stat.value}
             </span>
             <span
-              className="text-[7px] tracking-[0.48em] uppercase font-body"
-              style={{ color: 'rgba(248,244,238,0.5)' }}
+              style={{
+                fontFamily:    'var(--font-body)',
+                fontSize:      '0.44rem',
+                letterSpacing: '0.48em',
+                textTransform: 'uppercase',
+                color:         'rgba(248,244,238,0.5)',
+              }}
             >
               {stat.label}
             </span>
@@ -190,16 +271,26 @@ export function LandingSection() {
         ))}
       </div>
 
-      {/* ── Image indicator dots ────────────────────────────────────── */}
+      {/* ── Image indicator dots ────────────────────────────────── */}
       <div
-        className="absolute right-8 md:right-12 top-1/2 -translate-y-1/2 flex flex-col gap-2.5"
-        style={{ opacity: mounted ? 1 : 0, transition: 'opacity 1s ease 1.2s' }}
+        style={{
+          position:  'absolute',
+          right:     48,
+          top:       '50%',
+          transform: 'translateY(-50%)',
+          zIndex:    4,
+          display:   'flex',
+          flexDirection: 'column',
+          gap:       10,
+          opacity:   mounted ? 1 : 0,
+          transition: 'opacity 1s ease 1.2s',
+        }}
       >
         {HERO_IMAGES.map((_, i) => (
           <button
             key={i}
             onClick={() => setImgIndex(i)}
-            className="transition-all duration-400"
+            aria-label={`Image ${i + 1}`}
             style={{
               width:        2,
               height:       i === imgIndex ? 32 : 12,
@@ -208,30 +299,43 @@ export function LandingSection() {
               padding:      0,
               cursor:       'pointer',
               borderRadius: 1,
+              transition:   'height 0.4s ease, background 0.4s ease',
             }}
-            aria-label={`Image ${i + 1}`}
           />
         ))}
       </div>
 
-      {/* ── Scroll cue ─────────────────────────────────────────────── */}
+      {/* ── Scroll cue ──────────────────────────────────────────── */}
       <div
-        className="absolute bottom-10 right-8 md:right-12 flex flex-col items-center gap-2"
         style={{
-          opacity:    mounted ? 0.5 : 0,
-          transition: 'opacity 1s ease 1.4s',
+          position:      'absolute',
+          bottom:        40,
+          right:         48,
+          zIndex:        4,
+          display:       'flex',
+          flexDirection: 'column',
+          alignItems:    'center',
+          gap:           8,
+          opacity:       mounted ? 0.5 : 0,
+          transition:    'opacity 1s ease 1.5s',
         }}
       >
         <span
-          className="text-[7px] tracking-[0.5em] uppercase font-body"
-          style={{ color: 'rgba(248,244,238,0.6)', writingMode: 'vertical-rl' }}
+          style={{
+            fontFamily:    'var(--font-body)',
+            fontSize:      '0.44rem',
+            letterSpacing: '0.5em',
+            textTransform: 'uppercase',
+            color:         'rgba(248,244,238,0.6)',
+            writingMode:   'vertical-rl',
+          }}
         >
           Scroll
         </span>
         <div
           style={{
-            width: 1,
-            height: 40,
+            width:      1,
+            height:     40,
             background: 'linear-gradient(to bottom, rgba(201,168,76,0.6), transparent)',
           }}
         />
