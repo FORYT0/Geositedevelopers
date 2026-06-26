@@ -10,8 +10,61 @@ interface HotspotData {
   description: string;
   material: string;
   origin: string;
-  icon: string;
+  icon: string; // key into HOTSPOT_ICONS
 }
+
+// Clean SVG icons — no emoji
+const HOTSPOT_ICONS: Record<string, React.ReactElement> = {
+  sofa: (
+    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="8" width="16" height="8" rx="1.5"/>
+      <path d="M3 11.5 V9.5 Q3 7 1.5 7 V15"/>
+      <path d="M19 11.5 V9.5 Q19 7 20.5 7 V15"/>
+      <line x1="5" y1="16" x2="5" y2="19"/>
+      <line x1="17" y1="16" x2="17" y2="19"/>
+    </svg>
+  ),
+  lighting: (
+    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
+      <path d="M8.5 3.5 Q11 2 13.5 3.5 L12 10 H10 Z"/>
+      <line x1="11" y1="10" x2="11" y2="17"/>
+      <line x1="8" y1="17" x2="14" y2="17"/>
+      <ellipse cx="11" cy="19.5" rx="3" ry="1" strokeOpacity="0.4"/>
+    </svg>
+  ),
+  'coffee-table': (
+    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
+      <rect x="2" y="8.5" width="18" height="4" rx="1"/>
+      <line x1="5" y1="12.5" x2="5" y2="18"/>
+      <line x1="17" y1="12.5" x2="17" y2="18"/>
+    </svg>
+  ),
+  art: (
+    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
+      <rect x="2.5" y="3" width="17" height="15" rx="1"/>
+      <rect x="5" y="5.5" width="12" height="9" rx="0.5" strokeOpacity="0.45"/>
+      <path d="M5 11.5 L8 8.5 L10.5 11 L13.5 7.5 L17 11.5" strokeOpacity="0.7"/>
+    </svg>
+  ),
+  plant: (
+    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
+      <line x1="11" y1="19" x2="11" y2="10"/>
+      <path d="M11 15 Q8 12 5 13 Q6.5 8.5 11 11"/>
+      <path d="M11 12.5 Q14 9.5 17 10.5 Q15.5 6 11 9.5"/>
+      <line x1="8.5" y1="19" x2="13.5" y2="19"/>
+    </svg>
+  ),
+  rug: (
+    <svg viewBox="0 0 22 22" fill="none" width="20" height="20" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
+      <rect x="2" y="6" width="18" height="10" rx="1"/>
+      <rect x="5" y="9" width="12" height="4" rx="0.5" strokeOpacity="0.45"/>
+      <line x1="2" y1="9" x2="5" y2="9"/>
+      <line x1="17" y1="9" x2="20" y2="9"/>
+      <line x1="2" y1="13" x2="5" y2="13"/>
+      <line x1="17" y1="13" x2="20" y2="13"/>
+    </svg>
+  ),
+};
 
 const HOTSPOTS: HotspotData[] = [
   {
@@ -23,7 +76,7 @@ const HOTSPOTS: HotspotData[] = [
     description: 'Contemporary modular sofa with deep seating and premium velvet upholstery. Features customizable configuration and hidden storage compartments.',
     material: 'Premium Velvet · Solid Oak Frame · High-Density Foam',
     origin: 'Design Studio, 2025',
-    icon: '🛋',
+    icon: 'sofa',
   },
   {
     id: 'lighting',
@@ -34,7 +87,7 @@ const HOTSPOTS: HotspotData[] = [
     description: 'Sleek arc floor lamp with marble base and brushed brass finish. Adjustable height and dimmable LED bulb provide warm ambient lighting.',
     material: 'Marble Base · Brushed Brass · LED Technology',
     origin: 'Studio Collection, 2025',
-    icon: '✦',
+    icon: 'lighting',
   },
   {
     id: 'coffee-table',
@@ -45,7 +98,7 @@ const HOTSPOTS: HotspotData[] = [
     description: 'Minimalist coffee table with tempered glass top and walnut wood legs. Features a lower shelf for magazines and decorative items.',
     material: 'Tempered Glass · Walnut Wood · Metal Hardware',
     origin: 'Craft Workshop, 2025',
-    icon: '🪑',
+    icon: 'coffee-table',
   },
   {
     id: 'art',
@@ -56,7 +109,7 @@ const HOTSPOTS: HotspotData[] = [
     description: 'Large-scale abstract painting with geometric forms and subtle texture. Hand-painted on canvas with acrylics.',
     material: 'Acrylic on Canvas · Floating Wood Frame',
     origin: 'Artist Studio, 2024',
-    icon: '🖼',
+    icon: 'art',
   },
   {
     id: 'plant',
@@ -67,7 +120,7 @@ const HOTSPOTS: HotspotData[] = [
     description: 'Large fiddle leaf fig tree in ceramic planter. Brings life and natural beauty to indoor spaces.',
     material: 'Live Plant · Handcrafted Ceramic Planter',
     origin: 'Botanical Collection, 2025',
-    icon: '🌿',
+    icon: 'plant',
   },
   {
     id: 'rug',
@@ -78,7 +131,7 @@ const HOTSPOTS: HotspotData[] = [
     description: 'Hand-tufted wool rug with subtle geometric pattern. Soft underfoot and durable for high-traffic areas.',
     material: 'New Zealand Wool · Cotton Backing · Natural Dyes',
     origin: 'Textile Atelier, 2025',
-    icon: '🟫',
+    icon: 'rug',
   },
 ];
 
@@ -215,13 +268,20 @@ function GlassCard({ data, onClose }: { data: HotspotData; onClose: () => void }
           <div className="flex items-start justify-between mb-5">
             <div className="flex items-center gap-4">
               <span
-                className="flex items-center justify-center w-12 h-12 rounded-full text-2xl"
                 style={{
-                  background: 'rgba(201,168,76,0.15)',
-                  border: '2px solid rgba(201,168,76,0.4)',
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  width:          48,
+                  height:         48,
+                  borderRadius:   '50%',
+                  background:     'rgba(201,168,76,0.15)',
+                  border:         '1.5px solid rgba(201,168,76,0.4)',
+                  color:          '#C9A84C',
+                  flexShrink:     0,
                 }}
               >
-                {data.icon}
+                {HOTSPOT_ICONS[data.icon] ?? null}
               </span>
               <div>
                 <span
@@ -275,7 +335,7 @@ function GlassCard({ data, onClose }: { data: HotspotData; onClose: () => void }
                 color: 'var(--gold)',
               }}
             >
-              ✦ Design Studio Piece
+              ◇ Design Studio Piece
             </span>
           </div>
         </div>

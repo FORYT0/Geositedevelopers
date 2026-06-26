@@ -57,18 +57,57 @@ export function NavBar() {
       <div className="max-w-[1600px] mx-auto px-8 md:px-16 h-[72px] flex items-center justify-between">
 
         {/* Logo */}
-        <a href="#landing" className="flex flex-col leading-none">
-          <span
-            className="text-[8px] tracking-[0.42em] uppercase font-body font-medium"
-            style={{ color: '#C9A84C', transition: 'color 0.4s ease' }}
+        <a
+          href="#landing"
+          style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none' }}
+        >
+          {/* Isometric cube mark */}
+          <svg
+            viewBox="0 0 34 34"
+            width="30"
+            height="30"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ flexShrink: 0 }}
+            aria-hidden="true"
           >
-            GEO SITE
-          </span>
-          <span
-            className="text-[16px] tracking-[0.24em] uppercase font-display font-light"
-            style={{ color: logoText, transition: 'color 0.4s ease' }}
-          >
-            DEVELOPERS
+            {/* Top face */}
+            <path d="M17 3 L31 11 L17 19 L3 11 Z" stroke="#C9A84C" strokeWidth="1.3"/>
+            {/* Left face */}
+            <path d="M3 11 L3 23 L17 31 L17 19 Z" stroke="#C9A84C" strokeWidth="1.3"/>
+            {/* Right face */}
+            <path d="M31 11 L31 23 L17 31 L17 19 Z" stroke="#C9A84C" strokeWidth="1.3" strokeOpacity="0.45"/>
+          </svg>
+
+          {/* Wordmark */}
+          <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+            <span
+              style={{
+                fontFamily:    'var(--font-body)',
+                fontSize:      '0.46rem',
+                letterSpacing: '0.52em',
+                textTransform: 'uppercase',
+                fontWeight:    500,
+                color:         '#C9A84C',
+                transition:    'color 0.4s ease',
+              }}
+            >
+              Geosite
+            </span>
+            <span
+              style={{
+                fontFamily:    'var(--font-display)',
+                fontSize:      '1.05rem',
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+                fontWeight:    300,
+                color:         logoText,
+                transition:    'color 0.4s ease',
+                marginTop:     2,
+              }}
+            >
+              Developers
+            </span>
           </span>
         </a>
 

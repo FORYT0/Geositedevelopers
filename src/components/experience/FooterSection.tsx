@@ -114,14 +114,26 @@ export function FooterSection() {
             <h4 className="text-[8px] tracking-[0.5em] uppercase font-body" style={{ color: 'var(--gold)' }}>
               Contact Us
             </h4>
-            {[
-              { icon: '📍', label: 'Location',  value: 'Nairobi, Kenya' },
-              { icon: '✉', label: 'Email',     value: 'studio@geositedevelopers.co.ke' },
-              { icon: '☎', label: 'Phone',     value: '+254 700 000 000' },
-              { icon: '⏱', label: 'Hours',     value: 'Mon – Fri, 8am – 6pm EAT' },
-            ].map(item => (
-              <div key={item.label} className="flex items-start gap-3">
-                <span style={{ fontSize: 14, marginTop: 1 }}>{item.icon}</span>
+            {([
+              {
+                svg: <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round"><path d="M8 1.5 A4 4 0 1 1 8 9.5"/><path d="M8 9.5 L8 14.5"/><line x1="6" y1="14.5" x2="10" y2="14.5"/><circle cx="8" cy="5.5" r="1.3" fill="rgba(201,168,76,0.5)" stroke="none"/></svg>,
+                label: 'Location', value: 'Nairobi, Kenya',
+              },
+              {
+                svg: <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5"/><path d="M1.5 5 L8 9 L14.5 5"/></svg>,
+                label: 'Email', value: 'studio@geositedevelopers.co.ke',
+              },
+              {
+                svg: <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 2 H5.5 L7 5 L5.5 6.5 C6.5 8.5 7.5 9.5 9.5 10.5 L11 9 L14 10.5 V13.5 Q11.5 15.5 8.5 13 Q4.5 10.5 2.5 6.5 Q1.5 4 2.5 2 Z"/></svg>,
+                label: 'Phone', value: '+254 700 000 000',
+              },
+              {
+                svg: <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 4.5 V8 L10.5 10"/></svg>,
+                label: 'Hours', value: 'Mon – Fri, 8am – 6pm EAT',
+              },
+            ] as { svg: React.ReactElement; label: string; value: string }[]).map(item => (
+              <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <span style={{ marginTop: 2, flexShrink: 0 }}>{item.svg}</span>
                 <div>
                   <span className="block text-[7px] tracking-[0.4em] uppercase font-body mb-0.5" style={{ color: 'rgba(201,168,76,0.5)' }}>
                     {item.label}
