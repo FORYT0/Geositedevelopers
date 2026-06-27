@@ -7,28 +7,28 @@ const STEPS = [
     title:       'Discovery',
     subtitle:    'Understanding Your Vision',
     description: 'We begin with an in-depth consultation to understand your lifestyle, aesthetic preferences, and spatial goals. Every detail matters — from morning rituals to entertaining habits.',
-    image:       '/renders/Blue Spiral Hotel Ground full render.png',
+    image:       'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=85&auto=format&fit=crop',
   },
   {
     number:      '02',
     title:       'Concept',
     subtitle:    'Design Proposals',
     description: 'Our designers craft multiple bespoke concepts tailored specifically to your space. You receive mood boards, material palettes, and layout options — each a distinct design narrative.',
-    image:       '/renders/Blue Spiral Hotel Render.jpg',
+    image:       'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1200&q=85&auto=format&fit=crop',
   },
   {
     number:      '03',
     title:       'Visualise',
     subtitle:    '3D & BIM Rendering',
     description: 'Walk through photorealistic 3D renders and BIM models of your space before a single nail is hammered. Experience your new home virtually — lighting, materials, and all.',
-    image:       '/renders/Luxurious presidential suite Infinity feel 1.png',
+    image:       'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85&auto=format&fit=crop',
   },
   {
     number:      '04',
     title:       'Deliver',
     subtitle:    'Flawless Execution',
     description: 'Our trusted network of craftsmen and project managers bring the vision to life with surgical precision. We handle procurement, installation, and final styling — you simply arrive.',
-    image:       '/renders/Blue Spiral Hotel Entrance Final.png',
+    image:       'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200&q=85&auto=format&fit=crop',
   },
 ];
 

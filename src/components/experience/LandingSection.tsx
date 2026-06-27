@@ -2,9 +2,10 @@
 import { useEffect, useState } from 'react';
 
 const HERO_IMAGES = [
-  '/renders/Geosite page 1 Backdrop.jpg',
+  'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920&q=85&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1567767292278-a204ad538b7f?w=1920&q=85&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1920&q=85&auto=format&fit=crop',
   '/renders/Luxurious presidential suite Infinity feel 1.png',
-  '/renders/Blue Spiral Hotel Ground full render.png',
 ];
 
 interface Stat {

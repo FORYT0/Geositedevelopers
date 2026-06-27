@@ -32,6 +32,7 @@ export function NavBar() {
   const links = [
     { label: 'Studio',    href: '#landing' },
     { label: 'Process',   href: '#process' },
+    { label: 'Services',  href: '#services' },
     { label: 'Projects',  href: '#before-after' },
     { label: 'Portfolio', href: '#portfolio' },
     { label: 'Contact',   href: '#footer' },
