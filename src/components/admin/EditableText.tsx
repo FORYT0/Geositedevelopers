@@ -50,9 +50,8 @@ export function EditableText({
   };
 
   return (
-    // @ts-expect-error — ref polymorphism
-    <Tag
-      ref={ref}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    <Tag ref={ref as any}
       contentEditable
       suppressContentEditableWarning
       spellCheck={false}
