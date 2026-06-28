@@ -200,6 +200,165 @@ const FP_ROOMS: FPRoom[] = [
   },
 ];
 
+/* ─── Spatial Intelligence Engine ─────────────────────────── */
+
+// The 5 moveable slot positions (match FP_ROOMS x/y/w/h exactly)
+const SI_SLOTS = [
+  { id: 'a', x: 30,  y: 20,  w: 220, h: 150,
+    zone: 'North Wing — Left',
+    light:   5,  // 1–5 (5 = best north-facing daylight)
+    privacy: 1,  // 1–5 (5 = furthest from entry, most secluded)
+    noise:   3,  // 1–5 (1 = quietest)
+    adjacent: ['b', 'c'],
+  },
+  { id: 'b', x: 255, y: 20,  w: 130, h: 150,
+    zone: 'North Wing — Right',
+    light: 4, privacy: 2, noise: 4, adjacent: ['a', 'terrace'],
+  },
+  { id: 'c', x: 30,  y: 175, w: 165, h: 120,
+    zone: 'Mid Wing — Left',
+    light: 3, privacy: 4, noise: 2, adjacent: ['a', 'ensuite', 'd'],
+  },
+  { id: 'd', x: 200, y: 175, w: 130, h: 120,
+    zone: 'Mid Wing — Centre',
+    light: 2, privacy: 3, noise: 2, adjacent: ['c', 'e', 'guestbath'],
+  },
+  { id: 'e', x: 335, y: 175, w: 50,  h: 118,
+    zone: 'Mid Wing — East',
+    light: 2, privacy: 4, noise: 1, adjacent: ['d'],
+  },
+] as const;
+
+type SlotId = 'a' | 'b' | 'c' | 'd' | 'e';
+
+// Room types that float between slots
+interface SIRoom {
+  id:          string;
+  label:       string;
+  sqm:         number;
+  lightPref:   number;  // ideal slot.light (1–5)
+  privacyPref: number;  // ideal slot.privacy (1–5)
+  noiseTol:    number;  // max acceptable slot.noise (lower = more sensitive)
+  needsAdjTo:  string[];    // room/fixed IDs that should be adjacent for good flow
+  color:       string;
+  icon:        string;
+}
+
+const SI_ROOMS: SIRoom[] = [
+  { id: 'living',  label: 'Living & Dining', sqm: 42, lightPref: 5, privacyPref: 1, noiseTol: 5, needsAdjTo: ['b', 'kitchen'], color: '#C9A84C', icon: '◈' },
+  { id: 'kitchen', label: 'Kitchen',         sqm: 18, lightPref: 3, privacyPref: 2, noiseTol: 5, needsAdjTo: ['a', 'living'], color: '#A89060', icon: '◉' },
+  { id: 'master',  label: 'Master Suite',    sqm: 22, lightPref: 4, privacyPref: 5, noiseTol: 1, needsAdjTo: ['ensuite'],     color: '#B8A070', icon: '◐' },
+  { id: 'bed2',    label: 'Bedroom 2',       sqm: 16, lightPref: 3, privacyPref: 4, noiseTol: 1, needsAdjTo: [],              color: '#9B8B6E', icon: '◑' },
+  { id: 'study',   label: 'Study',           sqm: 12, lightPref: 4, privacyPref: 4, noiseTol: 1, needsAdjTo: [],              color: '#8A7A60', icon: '◻' },
+];
+
+const DEFAULT_ASSIGNMENT: Record<SlotId, string> = {
+  a: 'living', b: 'kitchen', c: 'master', d: 'bed2', e: 'study',
+};
+
+function getSIRoom(id: string): SIRoom {
+  return SI_ROOMS.find(r => r.id === id) ?? SI_ROOMS[0];
+}
+
+interface SIScores {
+  light: number; privacy: number; flow: number; quiet: number; overall: number;
+}
+
+function computeSIScores(assignment: Record<string, string>): SIScores {
+  let light = 0, privacy = 0, flow = 0, quiet = 0;
+  const n = SI_SLOTS.length;
+
+  SI_SLOTS.forEach(slot => {
+    const room = getSIRoom(assignment[slot.id]);
+    // Light match
+    light += Math.max(0, 100 - Math.abs(room.lightPref - slot.light) * 20);
+    // Privacy match
+    privacy += Math.max(0, 100 - Math.abs(room.privacyPref - slot.privacy) * 20);
+    // Noise tolerance
+    const noiseExcess = Math.max(0, slot.noise - room.noiseTol);
+    quiet += Math.max(0, 100 - noiseExcess * 30);
+    // Flow: check needed adjacencies
+    let flowRoom = 100;
+    for (const need of room.needsAdjTo) {
+      // Does any adjacent slot or this slot's fixed adjacency satisfy the need?
+      const isFixedAdj = slot.adjacent.includes(need as never);
+      // Is needed room in an adjacent moveable slot?
+      const neededSlot = Object.entries(assignment).find(([, r]) => r === need)?.[0];
+      const isMoveableAdj = neededSlot ? slot.adjacent.includes(neededSlot as never) : false;
+      if (!isFixedAdj && !isMoveableAdj) flowRoom -= 35;
+    }
+    flow += Math.max(0, flowRoom);
+  });
+
+  const scores = {
+    light:   Math.round(light / n),
+    privacy: Math.round(privacy / n),
+    flow:    Math.round(flow / n),
+    quiet:   Math.round(quiet / n),
+  };
+  return { ...scores, overall: Math.round((scores.light + scores.privacy + scores.flow + scores.quiet) / 4) };
+}
+
+interface FeedbackMsg { type: 'good' | 'warn' | 'tip'; text: string; delta?: string; }
+
+function getSIFeedback(assignment: Record<string, string>): FeedbackMsg[] {
+  const msgs: FeedbackMsg[] = [];
+
+  const slotOf = (roomId: string) => SI_SLOTS.find(s => assignment[s.id] === roomId);
+  const living  = slotOf('living');
+  const kitchen = slotOf('kitchen');
+  const master  = slotOf('master');
+  const study   = slotOf('study');
+
+  // Living light
+  if (living) {
+    if (living.light >= 4) msgs.push({ type: 'good', text: `Living & Dining in ${living.zone} — excellent north-facing daylight for social entertaining.` });
+    else msgs.push({ type: 'warn', text: `Living & Dining has suboptimal light (rating ${living.light}/5). Social spaces thrive with north-facing glazing.`, delta: '-18 pts' });
+  }
+
+  // Kitchen–Living adjacency
+  if (living && kitchen) {
+    const adj = living.adjacent.includes(kitchen.id as never);
+    if (adj) msgs.push({ type: 'good', text: 'Kitchen is directly adjacent to Living — optimal for entertaining flow and daily use.' });
+    else msgs.push({ type: 'warn', text: 'Kitchen is not adjacent to Living & Dining. The serving path is 30–45% longer than optimal.', delta: '-20 pts flow' });
+  }
+
+  // Master privacy
+  if (master) {
+    if (master.privacy >= 4) msgs.push({ type: 'good', text: `Master Suite in ${master.zone} — high-privacy zone, well away from the social and entry areas.` });
+    else msgs.push({ type: 'warn', text: 'Master Suite has insufficient privacy from the entry/social zone. Acoustic bleed and visual exposure increase significantly.', delta: '-25 pts' });
+  }
+
+  // Master ensuite access (slot 'c' is directly adjacent to ensuite)
+  const masterSlotId = Object.entries(assignment).find(([, r]) => r === 'master')?.[0];
+  if (masterSlotId === 'c') msgs.push({ type: 'good', text: 'Master Suite in Mid Wing Left — direct en-suite access, no shared corridor. Premium layout.' });
+  else {
+    const inC = getSIRoom(assignment['c']).label;
+    msgs.push({ type: 'tip', text: `Swap Master Suite with ${inC} (Mid Wing Left) to gain direct en-suite access and improve privacy.` });
+  }
+
+  // Study light
+  if (study && study.light <= 2) {
+    msgs.push({ type: 'tip', text: 'Study is in a low-light zone. Productivity research shows natural daylight improves sustained focus by 18%. Move to Slot A or B for best results.' });
+  } else if (study && study.light >= 4) {
+    msgs.push({ type: 'tip', text: 'Study has good natural light — beneficial for focus, but consider whether a bedroom might benefit more from this prime north-facing position.' });
+  }
+
+  // Noise: bedroom in high-noise slot
+  SI_SLOTS.forEach(slot => {
+    const room = getSIRoom(assignment[slot.id]);
+    if (['master', 'bed2', 'study'].includes(room.id) && slot.noise >= 4) {
+      msgs.push({ type: 'warn', text: `${room.label} is in a high-noise zone (${slot.zone}). Bedrooms and studies require quiet — acoustic treatment cost increases by ~KES 180K.`, delta: '-15 pts quiet' });
+    }
+  });
+
+  // Optimal check
+  const isOptimal = assignment['a'] === 'living' && assignment['b'] === 'kitchen' && assignment['c'] === 'master';
+  if (isOptimal) msgs.push({ type: 'good', text: 'This matches the Geosite Recommended layout — the highest-scoring configuration for this unit.' });
+
+  return msgs;
+}
+
 /* ─── Phase Timeline Data ──────────────────────────────────── */
 const PHASES = [
   {
@@ -390,26 +549,44 @@ function TabBar({ active, onChange }: { active: TabId; onChange: (t: TabId) => v
 }
 
 /* ── Floor Plan SVG ── */
-function FloorPlan({ activeRoom, setActiveRoom }: {
-  activeRoom: string | null;
+// Slot ID → FP_ROOM id mapping (for static view)
+const SLOT_TO_FP: Record<string, string> = {
+  a: 'living', b: 'kitchen', c: 'master', d: 'bed2', e: 'study',
+};
+const FP_TO_SLOT: Record<string, string> = Object.fromEntries(
+  Object.entries(SLOT_TO_FP).map(([k, v]) => [v, k])
+);
+
+function FloorPlan({ activeRoom, setActiveRoom, rearrangeMode = false, assignment, swapSource, onSlotClick }: {
+  activeRoom:    string | null;
   setActiveRoom: (id: string | null) => void;
+  rearrangeMode?: boolean;
+  assignment?:   Record<string, string>;
+  swapSource?:   string | null;
+  onSlotClick?:  (slotId: string) => void;
 }) {
   const [hoveredRoom, setHoveredRoom] = useState<string | null>(null);
 
   const getFill = (r: FPRoom) => {
-    const isActive  = activeRoom === r.id;
+    const slotId    = FP_TO_SLOT[r.id];
+    const isSource  = rearrangeMode && swapSource === slotId;
+    const isActive  = !rearrangeMode && activeRoom === r.id;
     const isHovered = hoveredRoom === r.id;
-    if (r.exterior) {
-      return isActive || isHovered ? 'rgba(122,144,112,0.18)' : 'rgba(122,144,112,0.06)';
-    }
-    if (isActive)  return 'rgba(201,168,76,0.20)';
-    if (isHovered) return 'rgba(201,168,76,0.12)';
+    if (r.exterior) return isActive || isHovered ? 'rgba(122,144,112,0.18)' : 'rgba(122,144,112,0.06)';
+    if (isSource)   return 'rgba(201,168,76,0.30)';
+    if (rearrangeMode && swapSource && isHovered && slotId && swapSource !== slotId) return 'rgba(201,168,76,0.18)';
+    if (isActive)   return 'rgba(201,168,76,0.20)';
+    if (isHovered)  return rearrangeMode && slotId ? 'rgba(201,168,76,0.10)' : 'rgba(201,168,76,0.12)';
     return 'rgba(201,168,76,0.04)';
   };
   const getStroke = (r: FPRoom) => {
-    const isActive  = activeRoom === r.id;
+    const slotId   = FP_TO_SLOT[r.id];
+    const isSource = rearrangeMode && swapSource === slotId;
+    const isActive = !rearrangeMode && activeRoom === r.id;
     const isHovered = hoveredRoom === r.id;
     if (r.exterior) return isActive || isHovered ? 'rgba(122,144,112,0.7)' : 'rgba(122,144,112,0.3)';
+    if (isSource)   return '#E8C97A';
+    if (rearrangeMode && swapSource && isHovered && slotId) return 'rgba(201,168,76,0.8)';
     if (isActive)   return '#C9A84C';
     if (isHovered)  return 'rgba(201,168,76,0.6)';
     return 'rgba(201,168,76,0.18)';
@@ -433,51 +610,94 @@ function FloorPlan({ activeRoom, setActiveRoom }: {
       {/* These are implied by the gaps between room rects */}
 
       {/* ── Room fills ── */}
-      {FP_ROOMS.map(r => (
-        <g key={r.id}
-          style={{ cursor: 'pointer' }}
-          onClick={() => setActiveRoom(activeRoom === r.id ? null : r.id)}
-          onMouseEnter={() => setHoveredRoom(r.id)}
-          onMouseLeave={() => setHoveredRoom(null)}
-        >
-          <rect
-            x={r.x} y={r.y} width={r.w} height={r.h}
-            fill={getFill(r)}
-            stroke={getStroke(r)}
-            strokeWidth={activeRoom === r.id ? 1.5 : 1}
-            strokeDasharray={r.exterior ? '6 3' : undefined}
-          />
-          {/* Badge number */}
-          <circle
-            cx={r.x + 10} cy={r.y + 10} r="8"
-            fill={activeRoom === r.id ? '#C9A84C' : 'rgba(201,168,76,0.18)'}
-          />
-          <text
-            x={r.x + 10} y={r.y + 14}
-            textAnchor="middle"
-            style={{ fontSize: 6, fontFamily: 'var(--font-body)', fontWeight: 700,
-              fill: activeRoom === r.id ? '#0A0908' : 'rgba(201,168,76,0.8)',
-              pointerEvents: 'none' }}
-          >{r.badge}</text>
+      {FP_ROOMS.map(r => {
+        const slotId   = FP_TO_SLOT[r.id];
+        const isMoveable = !!slotId;
+        // In rearrange mode, show the room currently assigned to this slot
+        const displayRoom = (rearrangeMode && isMoveable && assignment)
+          ? getSIRoom(assignment[slotId])
+          : null;
+        const isSource  = rearrangeMode && swapSource === slotId;
+        const isSelected = !rearrangeMode && activeRoom === r.id;
+        return (
+          <g key={r.id}
+            style={{ cursor: rearrangeMode && isMoveable ? 'crosshair' : 'pointer' }}
+            onClick={() => {
+              if (rearrangeMode && isMoveable && onSlotClick) {
+                onSlotClick(slotId);
+              } else if (!rearrangeMode) {
+                setActiveRoom(activeRoom === r.id ? null : r.id);
+              }
+            }}
+            onMouseEnter={() => setHoveredRoom(r.id)}
+            onMouseLeave={() => setHoveredRoom(null)}
+          >
+            <rect
+              x={r.x} y={r.y} width={r.w} height={r.h}
+              fill={getFill(r)}
+              stroke={getStroke(r)}
+              strokeWidth={isSource ? 2 : isSelected ? 1.5 : 1}
+              strokeDasharray={r.exterior ? '6 3' : isSource ? '8 3' : undefined}
+            />
 
-          {/* Room label */}
-          <text
-            x={r.x + r.w / 2} y={r.y + r.h / 2 - 7}
-            textAnchor="middle"
-            style={{ fontSize: r.w < 80 ? 5.5 : 7, fontFamily: 'var(--font-body)',
-              fill: activeRoom === r.id ? 'rgba(201,168,76,0.95)' : 'rgba(201,168,76,0.42)',
-              letterSpacing: '0.05em', textTransform: 'uppercase', pointerEvents: 'none' }}
-          >{r.label}</text>
-          {/* sqm */}
-          <text
-            x={r.x + r.w / 2} y={r.y + r.h / 2 + 8}
-            textAnchor="middle"
-            style={{ fontSize: 6.5, fontFamily: 'var(--font-body)',
-              fill: activeRoom === r.id ? 'rgba(248,244,238,0.8)' : 'rgba(248,244,238,0.22)',
-              pointerEvents: 'none' }}
-          >{r.sqm} m²</text>
-        </g>
-      ))}
+            {/* In rearrange mode: show dynamic room name from assignment */}
+            {rearrangeMode && isMoveable && displayRoom ? (
+              <>
+                {/* Slot letter badge */}
+                <text x={r.x + 8} y={r.y + 11}
+                  style={{ fontSize: 5.5, fontFamily: 'var(--font-body)', fill: isSource ? '#E8C97A' : 'rgba(201,168,76,0.5)', pointerEvents: 'none' }}>
+                  {slotId.toUpperCase()}
+                </text>
+                {/* Room name */}
+                <text x={r.x + r.w / 2} y={r.y + r.h / 2 - 8} textAnchor="middle"
+                  style={{ fontSize: r.w < 70 ? 5 : 7, fontFamily: 'var(--font-body)',
+                    fill: isSource ? '#E8C97A' : 'rgba(201,168,76,0.75)',
+                    letterSpacing: '0.04em', textTransform: 'uppercase', pointerEvents: 'none' }}>
+                  {displayRoom.label}
+                </text>
+                <text x={r.x + r.w / 2} y={r.y + r.h / 2 + 7} textAnchor="middle"
+                  style={{ fontSize: 6, fontFamily: 'var(--font-body)', fill: 'rgba(248,244,238,0.35)', pointerEvents: 'none' }}>
+                  {displayRoom.sqm} m²
+                </text>
+                {/* Swap prompt */}
+                {swapSource && swapSource !== slotId && (
+                  <text x={r.x + r.w / 2} y={r.y + r.h / 2 + 20} textAnchor="middle"
+                    style={{ fontSize: 5.5, fontFamily: 'var(--font-body)', fill: 'rgba(201,168,76,0.55)', letterSpacing: '0.2em', pointerEvents: 'none' }}>
+                    SWAP HERE
+                  </text>
+                )}
+                {/* Source glow ring */}
+                {isSource && (
+                  <rect x={r.x + 2} y={r.y + 2} width={r.w - 4} height={r.h - 4}
+                    fill="none" stroke="rgba(232,201,122,0.25)" strokeWidth="1.5" />
+                )}
+              </>
+            ) : (
+              <>
+                {/* Normal mode: static badge + label */}
+                <circle cx={r.x + 10} cy={r.y + 10} r="8"
+                  fill={isSelected ? '#C9A84C' : 'rgba(201,168,76,0.18)'} />
+                <text x={r.x + 10} y={r.y + 14} textAnchor="middle"
+                  style={{ fontSize: 6, fontFamily: 'var(--font-body)', fontWeight: 700,
+                    fill: isSelected ? '#0A0908' : 'rgba(201,168,76,0.8)', pointerEvents: 'none' }}>
+                  {r.badge}
+                </text>
+                <text x={r.x + r.w / 2} y={r.y + r.h / 2 - 7} textAnchor="middle"
+                  style={{ fontSize: r.w < 80 ? 5.5 : 7, fontFamily: 'var(--font-body)',
+                    fill: isSelected ? 'rgba(201,168,76,0.95)' : 'rgba(201,168,76,0.42)',
+                    letterSpacing: '0.05em', textTransform: 'uppercase', pointerEvents: 'none' }}>
+                  {r.label}
+                </text>
+                <text x={r.x + r.w / 2} y={r.y + r.h / 2 + 8} textAnchor="middle"
+                  style={{ fontSize: 6.5, fontFamily: 'var(--font-body)',
+                    fill: isSelected ? 'rgba(248,244,238,0.8)' : 'rgba(248,244,238,0.22)', pointerEvents: 'none' }}>
+                  {r.sqm} m²
+                </text>
+              </>
+            )}
+          </g>
+        );
+      })}
 
       {/* ── Furniture silhouettes ── */}
       {/* Living room — L-sofa */}
@@ -606,6 +826,154 @@ function FloorPlan({ activeRoom, setActiveRoom }: {
   );
 }
 
+/* ── Spatial Score Panel ── */
+function SpatialScorePanel({
+  scores, prevScores, feedback, assignment, swapSource, onReset,
+}: {
+  scores:     SIScores;
+  prevScores: SIScores | null;
+  feedback:   FeedbackMsg[];
+  assignment: Record<string, string>;
+  swapSource: string | null;
+  onReset:    () => void;
+}) {
+  const metrics: { key: keyof SIScores; label: string; icon: string; desc: string }[] = [
+    { key: 'light',   label: 'Natural Light',    icon: '◈', desc: 'How well north-facing daylight serves each room's needs' },
+    { key: 'privacy', label: 'Privacy',           icon: '◉', desc: 'Separation of private rooms from entry and social zones' },
+    { key: 'flow',    label: 'Circulation Flow',  icon: '◐', desc: 'Efficiency of the paths between functionally linked rooms' },
+    { key: 'quiet',   label: 'Acoustic Comfort',  icon: '◑', desc: 'Protection of sensitive rooms from noise sources' },
+  ];
+
+  const isOptimal = assignment['a'] === 'living' && assignment['b'] === 'kitchen' && assignment['c'] === 'master';
+  const getScoreColor = (s: number) => s >= 85 ? '#7AB870' : s >= 65 ? '#C9A84C' : '#C8624A';
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {/* Header + overall score */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', background: 'rgba(201,168,76,0.06)', borderBottom: '1px solid rgba(201,168,76,0.1)' }}>
+        <div>
+          <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.55)', marginBottom: 4 }}>
+            Spatial Intelligence Score
+          </span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.4rem, 4vw, 3.6rem)', fontWeight: 300, color: getScoreColor(scores.overall), lineHeight: 1, letterSpacing: '-0.04em', transition: 'color 0.5s ease' }}>
+              {scores.overall}
+            </span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'rgba(248,244,238,0.25)' }}>/100</span>
+            {prevScores && prevScores.overall !== scores.overall && (
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: scores.overall > prevScores.overall ? '#7AB870' : '#C8624A', fontWeight: 600 }}>
+                {scores.overall > prevScores.overall ? '↑' : '↓'}{Math.abs(scores.overall - prevScores.overall)}
+              </span>
+            )}
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+          {!isOptimal && (
+            <button onClick={onReset}
+              style={{ padding: '7px 14px', background: 'transparent', border: '1px solid rgba(201,168,76,0.3)', color: 'rgba(201,168,76,0.7)', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.3em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Reset to Recommended
+            </button>
+          )}
+          {isOptimal && (
+            <span style={{ padding: '5px 12px', background: 'rgba(122,184,112,0.12)', border: '1px solid rgba(122,184,112,0.3)', fontFamily: 'var(--font-body)', fontSize: '0.36rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#7AB870' }}>
+              ✓ Optimal Layout
+            </span>
+          )}
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.36rem', color: 'rgba(248,244,238,0.22)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+            {swapSource ? 'Select room to swap with →' : 'Click any room to select'}
+          </span>
+        </div>
+      </div>
+
+      {/* Metric bars */}
+      <div style={{ padding: '18px 22px 14px', borderBottom: '1px solid rgba(201,168,76,0.08)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 32px' }}>
+          {metrics.map(m => {
+            const val  = scores[m.key];
+            const prev = prevScores ? prevScores[m.key] : null;
+            const delta = prev !== null && prev !== val ? val - prev : null;
+            return (
+              <div key={m.key}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 9, color: 'rgba(201,168,76,0.5)' }}>{m.icon}</span>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.38)' }}>{m.label}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {delta !== null && (
+                      <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.36rem', color: delta > 0 ? '#7AB870' : '#C8624A', fontWeight: 600 }}>
+                        {delta > 0 ? '+' : ''}{delta}
+                      </span>
+                    )}
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.7rem', color: getScoreColor(val) }}>{val}</span>
+                  </div>
+                </div>
+                <div style={{ height: 4, background: 'rgba(248,244,238,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${val}%`, background: `linear-gradient(90deg, ${getScoreColor(val)}55, ${getScoreColor(val)})`, borderRadius: 2, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)' }} />
+                </div>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.64rem', color: 'rgba(248,244,238,0.2)', marginTop: 4, lineHeight: 1.4 }}>{m.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Room-slot table */}
+      <div style={{ padding: '14px 22px', borderBottom: '1px solid rgba(201,168,76,0.08)' }}>
+        <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.36rem', letterSpacing: '0.42em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.4)', marginBottom: 10 }}>
+          Current Assignment
+        </span>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
+          {SI_SLOTS.map(slot => {
+            const room = getSIRoom(assignment[slot.id]);
+            const isSelected = swapSource === slot.id;
+            return (
+              <div key={slot.id} style={{ padding: '8px 6px', background: isSelected ? 'rgba(201,168,76,0.14)' : 'rgba(248,244,238,0.03)', border: `1px solid ${isSelected ? '#C9A84C' : 'rgba(248,244,238,0.07)'}`, textAlign: 'center' }}>
+                <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.34rem', letterSpacing: '0.25em', color: 'rgba(201,168,76,0.5)', marginBottom: 3 }}>
+                  {slot.id.toUpperCase()}
+                </span>
+                <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.62rem', color: isSelected ? '#C9A84C' : 'rgba(248,244,238,0.45)', lineHeight: 1.2 }}>
+                  {room.label}
+                </span>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 3, marginTop: 4 }}>
+                  {[
+                    { v: slot.light,   p: room.lightPref },
+                    { v: slot.privacy, p: room.privacyPref },
+                    { v: 5 - slot.noise, p: room.noiseTol <= 2 ? 4 : 2 },
+                  ].map((pair, di) => (
+                    <div key={di} style={{ width: 4, height: 4, borderRadius: '50%', background: Math.abs(pair.v - pair.p) <= 1 ? '#7AB870' : 'rgba(200,98,74,0.6)' }} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.62rem', color: 'rgba(248,244,238,0.2)', marginTop: 8 }}>
+          Dots: <span style={{ color: '#7AB870' }}>● Light</span> · <span style={{ color: '#7AB870' }}>● Privacy</span> · <span style={{ color: '#7AB870' }}>● Quiet</span> — green = preference matched
+        </p>
+      </div>
+
+      {/* Feedback messages */}
+      <div style={{ padding: '14px 22px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.36rem', letterSpacing: '0.42em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.4)', marginBottom: 4 }}>
+          Design Analysis
+        </span>
+        {feedback.map((f, i) => (
+          <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 14px', background: f.type === 'good' ? 'rgba(122,184,112,0.06)' : f.type === 'warn' ? 'rgba(200,98,74,0.06)' : 'rgba(201,168,76,0.04)', borderLeft: `2px solid ${f.type === 'good' ? '#7AB870' : f.type === 'warn' ? '#C8624A' : '#C9A84C'}` }}>
+            <span style={{ fontSize: 10, flexShrink: 0, color: f.type === 'good' ? '#7AB870' : f.type === 'warn' ? '#C8624A' : '#C9A84C', lineHeight: 1.5 }}>
+              {f.type === 'good' ? '✓' : f.type === 'warn' ? '⚠' : '→'}
+            </span>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.74rem', color: 'rgba(248,244,238,0.45)', lineHeight: 1.65 }}>{f.text}</p>
+              {f.delta && <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.62rem', color: '#C8624A', fontWeight: 600 }}>{f.delta}</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── Room detail panel ── */
 function RoomDetailPanel({ room }: { room: FPRoom | null }) {
   if (!room) {
@@ -684,11 +1052,48 @@ function RoomDetailPanel({ room }: { room: FPRoom | null }) {
 
 /* ── Overview tab ── */
 function OverviewTab({ barsPct }: { barsPct: boolean }) {
-  const { content, isEditMode, updateField, removeItem, addItem } = useAdmin();
+  const { content, isEditMode, removeItem, addItem } = useAdmin(); // eslint-disable-line @typescript-eslint/no-unused-vars
   const stats     = content.bim.stats;
   const materials = content.bim.materials;
-  const [activeRoom, setActiveRoom] = useState<string | null>('living');
+
+  // Inspect mode state
+  const [activeRoom,   setActiveRoom]   = useState<string | null>('living');
   const room = FP_ROOMS.find(r => r.id === activeRoom) ?? null;
+
+  // Rearrange / Spatial Intelligence state
+  const [rearrangeMode, setRearrangeMode] = useState(false);
+  const [assignment, setAssignment] = useState<Record<string, string>>({ ...DEFAULT_ASSIGNMENT });
+  const [prevAssignment, setPrevAssignment] = useState<Record<string, string> | null>(null);
+  const [swapSource,  setSwapSource]  = useState<string | null>(null);
+
+  const scores     = computeSIScores(assignment);
+  const prevScores = prevAssignment ? computeSIScores(prevAssignment) : null;
+  const feedback   = getSIFeedback(assignment);
+
+  const handleSlotClick = (slotId: string) => {
+    if (!swapSource) {
+      setSwapSource(slotId);
+    } else if (swapSource === slotId) {
+      setSwapSource(null);
+    } else {
+      // Perform swap
+      setPrevAssignment({ ...assignment });
+      setAssignment(prev => {
+        const next = { ...prev };
+        const tmp = next[swapSource];
+        next[swapSource] = next[slotId];
+        next[slotId] = tmp;
+        return next;
+      });
+      setSwapSource(null);
+    }
+  };
+
+  const handleReset = () => {
+    setPrevAssignment({ ...assignment });
+    setAssignment({ ...DEFAULT_ASSIGNMENT });
+    setSwapSource(null);
+  };
 
   const totalFloor = FP_ROOMS.filter(r => !r.exterior).reduce((s, r) => s + r.sqm, 0);
 
@@ -702,9 +1107,24 @@ function OverviewTab({ barsPct }: { barsPct: boolean }) {
             <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: '#C9A84C' }}>Floor Plan — Level 1</span>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.2)', padding: '3px 8px', border: '1px solid rgba(248,244,238,0.08)' }}>Unit GS-14B</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.18)' }}>Scale 1 : 100</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 300, color: 'rgba(201,168,76,0.6)' }}>{totalFloor} m² net</span>
+            <button
+              onClick={() => { setRearrangeMode(v => !v); setSwapSource(null); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '7px 16px',
+                background: rearrangeMode ? 'rgba(201,168,76,0.14)' : 'transparent',
+                border: rearrangeMode ? '1px solid #C9A84C' : '1px solid rgba(248,244,238,0.15)',
+                color: rearrangeMode ? '#C9A84C' : 'rgba(248,244,238,0.45)',
+                fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.3em', textTransform: 'uppercase',
+                cursor: 'pointer', transition: 'all 0.25s ease',
+              }}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M1 3h8M1 7h8M3 1v8M7 1v8" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+              </svg>
+              {rearrangeMode ? 'Exit Rearrange' : 'Rearrange Rooms'}
+            </button>
           </div>
         </div>
 
@@ -723,40 +1143,75 @@ function OverviewTab({ barsPct }: { barsPct: boolean }) {
           ))}
         </div>
 
-        <div style={{ background: 'rgba(10,9,8,0.6)', border: '1px solid rgba(201,168,76,0.08)', padding: '8px 8px 4px' }}>
-          <FloorPlan activeRoom={activeRoom} setActiveRoom={setActiveRoom} />
+        {/* Rearrange mode instruction banner */}
+        {rearrangeMode && (
+          <div style={{ marginBottom: 10, padding: '10px 16px', background: 'rgba(201,168,76,0.07)', border: '1px solid rgba(201,168,76,0.18)', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 14, color: '#C9A84C' }}>↔</span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'rgba(248,244,238,0.45)', lineHeight: 1.5 }}>
+              {swapSource
+                ? `${getSIRoom(assignment[swapSource]).label} selected — click another room to swap positions`
+                : 'Click any highlighted room to select it, then click a second room to swap. Scores update instantly.'}
+            </span>
+            {swapSource && (
+              <button onClick={() => setSwapSource(null)}
+                style={{ marginLeft: 'auto', padding: '4px 10px', background: 'transparent', border: '1px solid rgba(248,244,238,0.15)', color: 'rgba(248,244,238,0.4)', fontFamily: 'var(--font-body)', fontSize: '0.34rem', letterSpacing: '0.25em', cursor: 'pointer', flexShrink: 0 }}>
+                Cancel
+              </button>
+            )}
+          </div>
+        )}
+
+        <div style={{ background: 'rgba(10,9,8,0.6)', border: `1px solid ${rearrangeMode ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.08)'}`, padding: '8px 8px 4px' }}>
+          <FloorPlan
+            activeRoom={activeRoom}
+            setActiveRoom={setActiveRoom}
+            rearrangeMode={rearrangeMode}
+            assignment={assignment}
+            swapSource={swapSource}
+            onSlotClick={handleSlotClick}
+          />
         </div>
 
-        {/* Room selector strip */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-          {FP_ROOMS.map(r => (
-            <button
-              key={r.id}
-              onClick={() => setActiveRoom(activeRoom === r.id ? null : r.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '5px 10px',
-                background: activeRoom === r.id ? 'rgba(201,168,76,0.12)' : 'transparent',
-                border: activeRoom === r.id ? '1px solid rgba(201,168,76,0.4)' : '1px solid rgba(248,244,238,0.07)',
-                cursor: 'pointer', transition: 'all 0.2s ease',
-              }}>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.35rem', letterSpacing: '0.15em', color: activeRoom === r.id ? '#C9A84C' : 'rgba(248,244,238,0.3)' }}>
-                {r.badge}
-              </span>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.4rem', letterSpacing: '0.15em', color: activeRoom === r.id ? '#F8F4EE' : 'rgba(248,244,238,0.4)' }}>
-                {r.label}
-              </span>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', color: 'rgba(248,244,238,0.2)' }}>
-                {r.sqm}m²
-              </span>
-            </button>
-          ))}
-        </div>
+        {/* Room selector strip (inspect mode only) */}
+        {!rearrangeMode && (
+          <>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+              {FP_ROOMS.map(r => (
+                <button
+                  key={r.id}
+                  onClick={() => setActiveRoom(activeRoom === r.id ? null : r.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '5px 10px',
+                    background: activeRoom === r.id ? 'rgba(201,168,76,0.12)' : 'transparent',
+                    border: activeRoom === r.id ? '1px solid rgba(201,168,76,0.4)' : '1px solid rgba(248,244,238,0.07)',
+                    cursor: 'pointer', transition: 'all 0.2s ease',
+                  }}>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.35rem', letterSpacing: '0.15em', color: activeRoom === r.id ? '#C9A84C' : 'rgba(248,244,238,0.3)' }}>{r.badge}</span>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.4rem', letterSpacing: '0.15em', color: activeRoom === r.id ? '#F8F4EE' : 'rgba(248,244,238,0.4)' }}>{r.label}</span>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', color: 'rgba(248,244,238,0.2)' }}>{r.sqm}m²</span>
+                </button>
+              ))}
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <RoomDetailPanel room={room} />
+            </div>
+          </>
+        )}
 
-        {/* Detail panel */}
-        <div style={{ marginTop: 12 }}>
-          <RoomDetailPanel room={room} />
-        </div>
+        {/* Spatial score panel (rearrange mode only) */}
+        {rearrangeMode && (
+          <div style={{ marginTop: 12, border: '1px solid rgba(201,168,76,0.12)', background: 'rgba(10,9,8,0.4)' }}>
+            <SpatialScorePanel
+              scores={scores}
+              prevScores={prevScores}
+              feedback={feedback}
+              assignment={assignment}
+              swapSource={swapSource}
+              onReset={handleReset}
+            />
+          </div>
+        )}
       </div>
 
       {/* ── Stats grid ── */}
