@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAdmin } from '@/src/contexts/AdminContext';
 import { EditableText } from '@/src/components/admin/EditableText';
 
@@ -42,37 +42,161 @@ function formatKES(amount: number): string {
   return `KES ${amount.toLocaleString()}`;
 }
 
-/* ─── Floor Plan Rooms ─────────────────────────────────────── */
-const ROOMS = [
+/* ─── Floor Plan Room Data ─────────────────────────────────── */
+// ViewBox: 0 0 520 420  |  Scale: 1 m = 26 px  |  Wall gap: 5 px (internal), 8 px (external)
+// Building outer face: x=22 y=12 w=476 h=396  →  inner floor: x=30 y=20 → x=490 y=400
+//
+// COLUMN edges (inner):  30 | 250 | 255 | 385 | 390 | 490
+// ROW edges    (inner):  20 | 170 | 175 | 295 | 300 | 400
+//
+// Room (x,y,w,h) = inner clear area (floor visible, no wall thickness)
+
+interface FPRoom {
+  id:        string;
+  badge:     string;
+  label:     string;
+  sqm:       number;
+  dims:      string;
+  x: number; y: number; w: number; h: number;
+  fillHue:   string;  // base color for fill
+  exterior?: boolean; // dashed border (terrace)
+  note:      string;
+  materials: { name: string; spec: string; swatch: string }[];
+  lighting:  string;
+  costRange: string;
+}
+
+const FP_ROOMS: FPRoom[] = [
   {
-    id: 'living', label: 'Living Room', sqm: 42, x: 40, y: 30, w: 240, h: 160,
-    tip: 'The social heart of the home. We prioritise acoustic zoning, bespoke seating, and layered lighting.',
-    materials: ['Engineered oak flooring', 'Venetian plaster feature wall', 'Coffered ceiling with cove lighting'],
-    keySpec: '42 m² · Open-plan',
+    id: 'living', badge: '01', label: 'Living & Dining', sqm: 42, dims: '8.5 × 5.0 m open plan',
+    x: 30, y: 20, w: 220, h: 150,
+    fillHue: '#C9A84C',
+    note: 'The social and cultural heart of the residence. Space planning zones living, dining, and circulation through layered materiality — rugs, ceiling treatments, and furniture groupings define each territory without walls.',
+    materials: [
+      { name: 'Engineered chevron oak',   spec: 'Natural oil finish, 180mm wide',       swatch: '#C4994E' },
+      { name: 'Venetian plaster wall',    spec: 'Burnished warm ivory, feature bay',    swatch: '#E8E0D4' },
+      { name: 'Coffered ceiling + cove',  spec: 'MDF coffer, concealed LED dim-to-warm', swatch: '#D4C8A8' },
+    ],
+    lighting: 'Statement pendant over dining table · Cove ambient · Arc floor lamps · Recessed adjustable spots for artwork',
+    costRange: 'KES 2.8M – 4.5M',
   },
   {
-    id: 'master', label: 'Master Suite', sqm: 28, x: 40, y: 200, w: 160, h: 120,
-    tip: 'A sanctuary for rest. Hidden storage, blackout draping, and spa-grade finishes define this space.',
-    materials: ['Hand-tufted wool carpet', 'Silk wall upholstery', 'Integrated walk-in wardrobe'],
-    keySpec: '28 m² · En-suite',
+    id: 'kitchen', badge: '02', label: 'Kitchen', sqm: 18, dims: '4.5 × 4.0 m',
+    x: 255, y: 20, w: 130, h: 150,
+    fillHue: '#9B8B6E',
+    note: 'A culinary studio designed for both function and theatre. Open to dining but visually separated by the island, the kitchen is a showpiece — integrated appliances, 40mm stone island, and task-perfect lighting.',
+    materials: [
+      { name: 'Calacatta Gold marble',    spec: 'Island waterfall edge, 40mm slab',     swatch: '#E8DCC8' },
+      { name: 'Custom walnut joinery',    spec: 'Handleless push-to-open, 2.7m run',    swatch: '#8B6B4A' },
+      { name: 'Miele appliance suite',    spec: 'Oven, induction, fridge — integrated', swatch: '#C0C0C4' },
+    ],
+    lighting: 'Under-cabinet LED strip · Recessed task above worktops · Pendant pair over island',
+    costRange: 'KES 1.6M – 3.5M',
   },
   {
-    id: 'bed2', label: 'Bedroom 2', sqm: 18, x: 210, y: 200, w: 120, h: 120,
-    tip: 'Versatile guest or children\'s space. Multifunctional furniture maximises every metre.',
-    materials: ['Engineered timber flooring', 'Painted feature wall', 'Bespoke joinery storage'],
-    keySpec: '18 m² · Guest/Study',
+    id: 'terrace', badge: '03', label: 'Terrace', sqm: 15, dims: '6.0 × 2.5 m',
+    x: 390, y: 20, w: 100, h: 295,
+    fillHue: '#7A9070',
+    exterior: true,
+    note: 'A true outdoor room with panoramic Nairobi skyline views. Teak decking, weather-resistant furniture, and planted screening create a private retreat at height. Structural waterproofing ensures zero maintenance ingress.',
+    materials: [
+      { name: 'FSC teak hardwood deck',   spec: 'Oiled finish, ipe fixing clips',       swatch: '#8B6B40' },
+      { name: 'Toughened glass balustrade', spec: '12mm clear, stainless shoe',         swatch: '#C8D8E0' },
+      { name: 'Irrigated green screen',   spec: 'Planted vertical wall, drip system',   swatch: '#5A7A50' },
+    ],
+    lighting: 'Flush deck lights · Wall-mounted weather-proof lanterns · Recessed soffit strips',
+    costRange: 'KES 480K – 980K',
   },
   {
-    id: 'kitchen', label: 'Kitchen', sqm: 22, x: 290, y: 30, w: 140, h: 120,
-    tip: 'Culinary precision meets beautiful design. Integrated appliances, stone islands, and task lighting.',
-    materials: ['Calacatta marble worktop', 'Custom walnut joinery', 'Integrated Miele appliances'],
-    keySpec: '22 m² · Island layout',
+    id: 'master', badge: '04', label: 'Master Suite', sqm: 22, dims: '5.5 × 4.0 m',
+    x: 30, y: 175, w: 165, h: 120,
+    fillHue: '#C9A84C',
+    note: 'A sanctuary for absolute rest. Blackout draping, STC-50 acoustic partition walls, and spa-grade finishes create a genuine retreat. The entire north wall becomes a fitted wardrobe wall — no separate walk-in needed.',
+    materials: [
+      { name: 'Hand-tufted wool carpet',  spec: '14mm pile height, natural ivory',      swatch: '#E0D8C8' },
+      { name: 'Silk-effect wall panels',  spec: 'Sound-absorbing, bespoke upholstery',  swatch: '#C8B898' },
+      { name: 'Wardrobe wall joinery',    spec: 'Full height, mirror + lacquer doors',  swatch: '#D4C8B0' },
+    ],
+    lighting: 'Pendant pair on separate dimmer circuits · Cove ambient · Bedside reading spots',
+    costRange: 'KES 1.2M – 2.4M',
   },
   {
-    id: 'bath', label: 'Bathroom', sqm: 8, x: 290, y: 160, w: 140, h: 60,
-    tip: 'A private retreat. Heated marble floors, freestanding tubs, and rain showers define the Geosite spa bathroom.',
-    materials: ['Statuary marble floor & walls', 'Freestanding stone tub', 'Polished brass hardware'],
-    keySpec: '8 m² · Spa-grade',
+    id: 'bed2', badge: '05', label: 'Bedroom 2', sqm: 16, dims: '4.5 × 3.5 m',
+    x: 200, y: 175, w: 130, h: 120,
+    fillHue: '#9B8B6E',
+    note: 'A versatile guest or secondary bedroom. Bespoke joinery conceals a fold-down desk, making this equally a professional home office. Wide-plank flooring and limewash walls create warmth without heaviness.',
+    materials: [
+      { name: 'Wide-plank white oak',     spec: '220mm boards, UV oil finish',          swatch: '#C4A870' },
+      { name: 'Limewash feature wall',    spec: 'Soft sage, layered artisan technique', swatch: '#B8C4A8' },
+      { name: 'Upholstered headboard',    spec: 'Bespoke height, integrated wall lights', swatch: '#C8B8A0' },
+    ],
+    lighting: 'Ceiling pendant · Recessed bedside directional spots · Desk task lamp point',
+    costRange: 'KES 780K – 1.4M',
+  },
+  {
+    id: 'study', badge: '06', label: 'Study / WFH', sqm: 12, dims: '3.5 × 3.4 m',
+    x: 335, y: 175, w: 50, h: 118,
+    fillHue: '#7A8090',
+    note: 'A focused, distraction-free workspace calibrated for deep work and professional video calls. Acoustic treatment on the back wall, bookshelving to both sides, and a client-facing backdrop that communicates authority.',
+    materials: [
+      { name: 'Full-width walnut desk',   spec: 'Fitted, cable-managed trunking below', swatch: '#7A5A38' },
+      { name: 'Acoustic felt wall panel', spec: 'Behind desk, timber batten frame',     swatch: '#8A9090' },
+      { name: 'Library shelving',         spec: 'Floor-to-ceiling, adjustable pegs',    swatch: '#B0A898' },
+    ],
+    lighting: 'Daylight-temp LED task (5000K) · Ceiling recessed ambient · Strip lighting in shelves',
+    costRange: 'KES 600K – 1.2M',
+  },
+  {
+    id: 'ensuite', badge: '07', label: 'Master En-Suite', sqm: 9, dims: '3.0 × 3.0 m',
+    x: 30, y: 300, w: 95, h: 100,
+    fillHue: '#8090A0',
+    note: 'A spa-grade private bathroom adjoining the master suite. Underfloor heating activates automatically with the first morning step. Rain shower, freestanding stone tub, and dual vanity provide a five-star daily ritual.',
+    materials: [
+      { name: 'Statuary White marble',    spec: 'Honed 600×300mm, floor & feature wall', swatch: '#F0EDE8' },
+      { name: 'Freestanding stone tub',   spec: 'Cast composite, 1700mm, matte white',   swatch: '#E8E4DC' },
+      { name: 'Polished brass fixtures',  spec: 'Gessi / Vola spec, PVD coated',         swatch: '#C9A84C' },
+    ],
+    lighting: 'Backlit mirror · Recessed shower downlight (IP65) · Cove above bath niche',
+    costRange: 'KES 800K – 1.6M',
+  },
+  {
+    id: 'wic', badge: '08', label: 'Walk-In Wardrobe', sqm: 7, dims: '2.8 × 2.5 m',
+    x: 130, y: 300, w: 65, h: 100,
+    fillHue: '#9B8B6E',
+    note: 'A dressing room designed with boutique-retail joinery quality. Central island with velvet-lined drawers, hanging rails at two heights, pull-out trouser racks, and a full-length back-lit mirror.',
+    materials: [
+      { name: 'Lacquered MDF joinery',    spec: 'Bespoke layout, satin white finish',   swatch: '#F0EDEA' },
+      { name: 'Velvet drawer liners',     spec: 'Deep sea blue, brass corner clips',    swatch: '#3A4A6A' },
+      { name: 'Central island unit',      spec: '900mm wide, 4-drawer stack + shelf',   swatch: '#C8B898' },
+    ],
+    lighting: 'Track-head adjustable · Integrated LED strips in joinery · Full-length mirror back-light',
+    costRange: 'KES 480K – 920K',
+  },
+  {
+    id: 'guestbath', badge: '09', label: 'Guest Bathroom', sqm: 6, dims: '2.5 × 2.4 m',
+    x: 200, y: 300, w: 80, h: 100,
+    fillHue: '#8090A0',
+    note: 'A beautifully appointed guest bathroom that speaks to the standard of the whole residence. Marble surfaces, concealed cistern WC, and a quality basin on a bespoke vanity unit — never an afterthought.',
+    materials: [
+      { name: 'Grey Emperador marble',    spec: '400×800mm, feature wall + floor',      swatch: '#7A6A58' },
+      { name: 'Stone composite basin',    spec: 'Freestanding on brass stand',          swatch: '#D8D0C8' },
+      { name: 'Wall-hung WC',             spec: 'Concealed cistern, soft-close seat',   swatch: '#E8E4E0' },
+    ],
+    lighting: 'Mirror cabinet with integrated strip · Recessed ceiling IP44 · Mood night light',
+    costRange: 'KES 420K – 850K',
+  },
+  {
+    id: 'foyer', badge: '10', label: 'Entrance Foyer', sqm: 9, dims: '3.0 × 3.0 m',
+    x: 285, y: 300, w: 100, h: 100,
+    fillHue: '#A09070',
+    note: 'The first impression sets the entire register of the residence. We design foyers as arrival galleries — art-hung walls, statement lighting, and a deliberate sense of ceremony before the main space unfolds.',
+    materials: [
+      { name: 'Basalt stone flooring',    spec: 'Honed 600×600mm, inset brass trim',   swatch: '#5A5248' },
+      { name: 'Millwork console + mirror', spec: 'Walnut with brass inlay detail',      swatch: '#8B6B4A' },
+      { name: 'Statement entry light',    spec: 'Sculptural pendant, 400mm diameter',   swatch: '#C9A84C' },
+    ],
+    lighting: 'Single large pendant as centrepiece · Recessed cans at perimeter · Picture light over key artwork',
+    costRange: 'KES 650K – 1.2M',
   },
 ];
 
@@ -265,116 +389,401 @@ function TabBar({ active, onChange }: { active: TabId; onChange: (t: TabId) => v
   );
 }
 
+/* ── Floor Plan SVG ── */
+function FloorPlan({ activeRoom, setActiveRoom }: {
+  activeRoom: string | null;
+  setActiveRoom: (id: string | null) => void;
+}) {
+  const [hoveredRoom, setHoveredRoom] = useState<string | null>(null);
+
+  const getFill = (r: FPRoom) => {
+    const isActive  = activeRoom === r.id;
+    const isHovered = hoveredRoom === r.id;
+    if (r.exterior) {
+      return isActive || isHovered ? 'rgba(122,144,112,0.18)' : 'rgba(122,144,112,0.06)';
+    }
+    if (isActive)  return 'rgba(201,168,76,0.20)';
+    if (isHovered) return 'rgba(201,168,76,0.12)';
+    return 'rgba(201,168,76,0.04)';
+  };
+  const getStroke = (r: FPRoom) => {
+    const isActive  = activeRoom === r.id;
+    const isHovered = hoveredRoom === r.id;
+    if (r.exterior) return isActive || isHovered ? 'rgba(122,144,112,0.7)' : 'rgba(122,144,112,0.3)';
+    if (isActive)   return '#C9A84C';
+    if (isHovered)  return 'rgba(201,168,76,0.6)';
+    return 'rgba(201,168,76,0.18)';
+  };
+
+  return (
+    <svg viewBox="0 0 520 420" style={{ display: 'block', width: '100%' }}>
+      {/* ── Outer wall (building envelope) ── */}
+      {/* Shadow */}
+      <rect x="26" y="16" width="476" height="396" fill="rgba(0,0,0,0.4)" />
+      {/* Wall body */}
+      <rect x="22" y="12" width="476" height="396" fill="#1A1612" />
+      {/* Floor field */}
+      <rect x="30" y="20" width="460" height="380" fill="rgba(248,244,238,0.025)" />
+
+      {/* ── Internal partition lines (walls between rooms) ── */}
+      {/* Vertical wall between living/kitchen and bedroom/study zone (x≈250) */}
+      {/* Already gap is 5px. Just draw a subtle hairline on the wall center */}
+      {/* Horizontal wall between row 1 and row 2 (y=170-175) */}
+      {/* Row 2 and row 3 (y=295-300) */}
+      {/* These are implied by the gaps between room rects */}
+
+      {/* ── Room fills ── */}
+      {FP_ROOMS.map(r => (
+        <g key={r.id}
+          style={{ cursor: 'pointer' }}
+          onClick={() => setActiveRoom(activeRoom === r.id ? null : r.id)}
+          onMouseEnter={() => setHoveredRoom(r.id)}
+          onMouseLeave={() => setHoveredRoom(null)}
+        >
+          <rect
+            x={r.x} y={r.y} width={r.w} height={r.h}
+            fill={getFill(r)}
+            stroke={getStroke(r)}
+            strokeWidth={activeRoom === r.id ? 1.5 : 1}
+            strokeDasharray={r.exterior ? '6 3' : undefined}
+          />
+          {/* Badge number */}
+          <circle
+            cx={r.x + 10} cy={r.y + 10} r="8"
+            fill={activeRoom === r.id ? '#C9A84C' : 'rgba(201,168,76,0.18)'}
+          />
+          <text
+            x={r.x + 10} y={r.y + 14}
+            textAnchor="middle"
+            style={{ fontSize: 6, fontFamily: 'var(--font-body)', fontWeight: 700,
+              fill: activeRoom === r.id ? '#0A0908' : 'rgba(201,168,76,0.8)',
+              pointerEvents: 'none' }}
+          >{r.badge}</text>
+
+          {/* Room label */}
+          <text
+            x={r.x + r.w / 2} y={r.y + r.h / 2 - 7}
+            textAnchor="middle"
+            style={{ fontSize: r.w < 80 ? 5.5 : 7, fontFamily: 'var(--font-body)',
+              fill: activeRoom === r.id ? 'rgba(201,168,76,0.95)' : 'rgba(201,168,76,0.42)',
+              letterSpacing: '0.05em', textTransform: 'uppercase', pointerEvents: 'none' }}
+          >{r.label}</text>
+          {/* sqm */}
+          <text
+            x={r.x + r.w / 2} y={r.y + r.h / 2 + 8}
+            textAnchor="middle"
+            style={{ fontSize: 6.5, fontFamily: 'var(--font-body)',
+              fill: activeRoom === r.id ? 'rgba(248,244,238,0.8)' : 'rgba(248,244,238,0.22)',
+              pointerEvents: 'none' }}
+          >{r.sqm} m²</text>
+        </g>
+      ))}
+
+      {/* ── Furniture silhouettes ── */}
+      {/* Living room — L-sofa */}
+      <rect x="40" y="110" width="80" height="30" rx="2" fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="1" />
+      <rect x="40" y="110" width="22" height="52" rx="2" fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="1" />
+      {/* Coffee table */}
+      <rect x="70" y="122" width="34" height="20" rx="1" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.8" />
+      {/* TV unit (living, north wall) */}
+      <rect x="45" y="25" width="100" height="8" rx="1" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.8" />
+      {/* Dining table + 4 chairs */}
+      <rect x="155" y="82" width="50" height="30" rx="2" fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="1" />
+      <rect x="158" y="76" width="14" height="6" rx="1" fill="none" stroke="rgba(201,168,76,0.09)" strokeWidth="0.8" />
+      <rect x="178" y="76" width="14" height="6" rx="1" fill="none" stroke="rgba(201,168,76,0.09)" strokeWidth="0.8" />
+      <rect x="158" y="112" width="14" height="6" rx="1" fill="none" stroke="rgba(201,168,76,0.09)" strokeWidth="0.8" />
+      <rect x="178" y="112" width="14" height="6" rx="1" fill="none" stroke="rgba(201,168,76,0.09)" strokeWidth="0.8" />
+
+      {/* Kitchen — island + counter L */}
+      <rect x="263" y="32" width="55" height="18" rx="1" fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="1" />
+      {/* counter along top wall */}
+      <rect x="263" y="25" width="114" height="6" rx="0" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.8" />
+      {/* sink symbol */}
+      <rect x="330" y="28" width="16" height="10" rx="1" fill="none" stroke="rgba(201,168,76,0.15)" strokeWidth="0.8" />
+      {/* cooktop circles */}
+      <circle cx="273" cy="41" r="4" fill="none" stroke="rgba(201,168,76,0.15)" strokeWidth="0.8" />
+      <circle cx="285" cy="41" r="4" fill="none" stroke="rgba(201,168,76,0.15)" strokeWidth="0.8" />
+      <circle cx="297" cy="41" r="4" fill="none" stroke="rgba(201,168,76,0.15)" strokeWidth="0.8" />
+
+      {/* Master bedroom — bed */}
+      <rect x="44" y="195" width="82" height="58" rx="2" fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="1" />
+      {/* Pillows */}
+      <rect x="47" y="198" width="18" height="12" rx="2" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.8" />
+      <rect x="70" y="198" width="18" height="12" rx="2" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.8" />
+      {/* nightstands */}
+      <rect x="33" y="200" width="10" height="14" rx="1" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.7" />
+      <rect x="127" y="200" width="10" height="14" rx="1" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.7" />
+      {/* wardrobe strip (north wall of master) */}
+      <rect x="33" y="178" width="159" height="9" rx="0" fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="0.8" />
+
+      {/* Bedroom 2 — bed */}
+      <rect x="214" y="193" width="68" height="50" rx="2" fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="1" />
+      <rect x="218" y="196" width="14" height="10" rx="2" fill="none" stroke="rgba(201,168,76,0.09)" strokeWidth="0.7" />
+      <rect x="238" y="196" width="14" height="10" rx="2" fill="none" stroke="rgba(201,168,76,0.09)" strokeWidth="0.7" />
+
+      {/* Study — desk */}
+      <rect x="340" y="182" width="38" height="12" rx="1" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.8" />
+      {/* Chair */}
+      <circle cx="360" cy="204" r="6" fill="none" stroke="rgba(201,168,76,0.09)" strokeWidth="0.7" />
+
+      {/* En-suite — bath + WC + shower */}
+      <rect x="38" y="318" width="32" height="54" rx="4" fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="1" />
+      {/* Shower */}
+      <rect x="76" y="318" width="28" height="26" rx="1" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.8" />
+      <line x1="76" y1="318" x2="104" y2="344" stroke="rgba(201,168,76,0.08)" strokeWidth="0.6" />
+      <line x1="104" y1="318" x2="76" y2="344" stroke="rgba(201,168,76,0.08)" strokeWidth="0.6" />
+      {/* WC symbol */}
+      <rect x="76" y="352" width="20" height="28" rx="4" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.8" />
+
+      {/* Guest Bath — WC + basin */}
+      <rect x="208" y="318" width="18" height="24" rx="4" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.8" />
+      <rect x="232" y="318" width="16" height="12" rx="2" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="0.7" />
+
+      {/* ── Door swings ── */}
+      {/* Front door (entry to foyer from right/south) */}
+      <line x1="285" y1="400" x2="285" y2="385" stroke="rgba(201,168,76,0.22)" strokeWidth="1" />
+      <path d="M 285 385 A 15 15 0 0 1 300 400" fill="none" stroke="rgba(201,168,76,0.18)" strokeWidth="0.8" strokeDasharray="3 2"/>
+      {/* Foyer → Living (passage opening, no door — just opening mark) */}
+      <line x1="255" y1="300" x2="255" y2="350" stroke="rgba(201,168,76,0.1)" strokeWidth="3" />
+      {/* Master → Ensuite */}
+      <line x1="30" y1="300" x2="50" y2="300" stroke="rgba(201,168,76,0.22)" strokeWidth="1" />
+      <path d="M 30 300 A 20 20 0 0 0 50 280" fill="none" stroke="rgba(201,168,76,0.18)" strokeWidth="0.8" strokeDasharray="3 2"/>
+      {/* Kitchen to living (open plan – show as no wall, just threshold line) */}
+      <line x1="250" y1="20" x2="250" y2="170" stroke="rgba(201,168,76,0.1)" strokeWidth="1.5" strokeDasharray="4 3" />
+
+      {/* ── Windows (on north outer wall y=20) ── */}
+      {/* Living room north window band */}
+      <line x1="55" y1="20" x2="215" y2="20" stroke="rgba(248,244,238,0.25)" strokeWidth="2.5" />
+      <line x1="55" y1="15" x2="215" y2="15" stroke="rgba(248,244,238,0.12)" strokeWidth="1" />
+      {/* Master bedroom north window */}
+      <line x1="45" y1="175" x2="175" y2="175" stroke="rgba(248,244,238,0.2)" strokeWidth="2.5" />
+      <line x1="45" y1="170" x2="175" y2="170" stroke="rgba(248,244,238,0.1)" strokeWidth="1" />
+      {/* Kitchen north window */}
+      <line x1="265" y1="20" x2="370" y2="20" stroke="rgba(248,244,238,0.2)" strokeWidth="2.5" />
+      <line x1="265" y1="15" x2="370" y2="15" stroke="rgba(248,244,238,0.1)" strokeWidth="1" />
+
+      {/* ── Dimension lines ── */}
+      {/* Overall width: below building */}
+      <line x1="22" y1="412" x2="498" y2="412" stroke="rgba(201,168,76,0.2)" strokeWidth="0.8" />
+      <line x1="22" y1="408" x2="22" y2="416" stroke="rgba(201,168,76,0.2)" strokeWidth="0.8" />
+      <line x1="498" y1="408" x2="498" y2="416" stroke="rgba(201,168,76,0.2)" strokeWidth="0.8" />
+      <text x="260" y="417" textAnchor="middle"
+        style={{ fontSize: 6, fontFamily: 'var(--font-body)', fill: 'rgba(201,168,76,0.35)', letterSpacing: '0.15em' }}>
+        18.3 m
+      </text>
+      {/* Overall height: right side */}
+      <line x1="504" y1="12" x2="504" y2="408" stroke="rgba(201,168,76,0.2)" strokeWidth="0.8" />
+      <line x1="500" y1="12" x2="508" y2="12" stroke="rgba(201,168,76,0.2)" strokeWidth="0.8" />
+      <line x1="500" y1="408" x2="508" y2="408" stroke="rgba(201,168,76,0.2)" strokeWidth="0.8" />
+      <text x="514" y="213" textAnchor="middle"
+        style={{ fontSize: 6, fontFamily: 'var(--font-body)', fill: 'rgba(201,168,76,0.35)', letterSpacing: '0.15em', writingMode: 'vertical-rl' }}>
+        15.2 m
+      </text>
+
+      {/* ── North compass ── */}
+      <g transform="translate(505, 38)">
+        <circle cx="0" cy="0" r="13" fill="rgba(10,9,8,0.7)" stroke="rgba(201,168,76,0.2)" strokeWidth="0.8" />
+        <path d="M0 -9 L-3 4 L0 1 L3 4 Z" fill="#C9A84C" opacity="0.7" />
+        <path d="M0 -9 L3 4 L0 1 L-3 4 Z" fill="rgba(248,244,238,0.15)" />
+        <text y="5.5" textAnchor="middle" style={{ fontSize: 6, fill: 'rgba(201,168,76,0.55)', fontFamily: 'var(--font-body)', fontWeight: 700 }}>N</text>
+      </g>
+
+      {/* ── Scale bar ── */}
+      <g transform="translate(33, 411)">
+        <line x1="0" y1="0" x2="52" y2="0" stroke="rgba(201,168,76,0.3)" strokeWidth="1" />
+        <line x1="0" y1="-3" x2="0" y2="3" stroke="rgba(201,168,76,0.3)" strokeWidth="1" />
+        <line x1="26" y1="-2" x2="26" y2="2" stroke="rgba(201,168,76,0.2)" strokeWidth="0.7" />
+        <line x1="52" y1="-3" x2="52" y2="3" stroke="rgba(201,168,76,0.3)" strokeWidth="1" />
+        <text x="26" y="-5" textAnchor="middle" style={{ fontSize: 5, fill: 'rgba(201,168,76,0.4)', fontFamily: 'var(--font-body)' }}>2 m</text>
+      </g>
+
+      {/* ── Legend: exterior label ── */}
+      <text x="395" y="120" textAnchor="middle"
+        style={{ fontSize: 5.5, fontFamily: 'var(--font-body)', fill: 'rgba(122,144,112,0.5)', letterSpacing: '0.1em', writingMode: 'vertical-rl' }}>
+        TERRACE / EXTERIOR
+      </text>
+    </svg>
+  );
+}
+
+/* ── Room detail panel ── */
+function RoomDetailPanel({ room }: { room: FPRoom | null }) {
+  if (!room) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 140, border: '1px solid rgba(248,244,238,0.05)', background: 'rgba(248,244,238,0.015)' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 32, height: 1, background: 'rgba(201,168,76,0.2)', margin: '0 auto 12px' }} />
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.4rem', letterSpacing: '0.42em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.18)' }}>
+            Select a room to inspect
+          </span>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div style={{ border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.04)' }}>
+      {/* Header */}
+      <div style={{ padding: '18px 22px 14px', borderBottom: '1px solid rgba(201,168,76,0.1)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <div style={{ width: 22, height: 22, background: '#C9A84C', borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.4rem', fontWeight: 700, color: '#0A0908' }}>{room.badge}</span>
+            </div>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.42em', textTransform: 'uppercase', color: '#C9A84C' }}>{room.label}</span>
+          </div>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'rgba(248,244,238,0.3)' }}>{room.dims}</span>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <span style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, color: '#F8F4EE', lineHeight: 1, letterSpacing: '-0.03em' }}>
+            {room.sqm}
+          </span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.3)' }}>m²</span>
+        </div>
+      </div>
+      {/* Design note */}
+      <div style={{ padding: '14px 22px', borderBottom: '1px solid rgba(201,168,76,0.08)' }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'rgba(248,244,238,0.4)', lineHeight: 1.78 }}>
+          {room.note}
+        </p>
+      </div>
+      {/* Materials */}
+      <div style={{ padding: '14px 22px', borderBottom: '1px solid rgba(201,168,76,0.08)' }}>
+        <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.45)', marginBottom: 10 }}>
+          Specified Finishes
+        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {room.materials.map((mat, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 22, height: 14, background: mat.swatch, borderRadius: 1, flexShrink: 0, border: '1px solid rgba(248,244,238,0.08)' }} />
+              <div>
+                <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'rgba(248,244,238,0.6)', lineHeight: 1.3 }}>{mat.name}</span>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'rgba(248,244,238,0.28)' }}>{mat.spec}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Lighting + Cost */}
+      <div style={{ padding: '12px 22px 14px', display: 'grid', gridTemplateColumns: '1fr auto', gap: 16, alignItems: 'start' }}>
+        <div>
+          <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.4)', marginBottom: 5 }}>
+            Lighting Strategy
+          </span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'rgba(248,244,238,0.35)', lineHeight: 1.6 }}>{room.lighting}</span>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.36rem', letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.4)', marginBottom: 4 }}>
+            Fit-out Range
+          </span>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 300, color: '#C9A84C', whiteSpace: 'nowrap' }}>{room.costRange}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Overview tab ── */
 function OverviewTab({ barsPct }: { barsPct: boolean }) {
   const { content, isEditMode, updateField, removeItem, addItem } = useAdmin();
   const stats     = content.bim.stats;
   const materials = content.bim.materials;
-  const [activeRoom, setActiveRoom] = useState<string | null>(null);
-  const room = ROOMS.find(r => r.id === activeRoom);
+  const [activeRoom, setActiveRoom] = useState<string | null>('living');
+  const room = FP_ROOMS.find(r => r.id === activeRoom) ?? null;
+
+  const totalFloor = FP_ROOMS.filter(r => !r.exterior).reduce((s, r) => s + r.sqm, 0);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(32px, 5vw, 64px)', alignItems: 'start' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(40px, 5vw, 56px)' }}>
 
-      {/* Left: SVG floor plan */}
+      {/* ── Floor plan ── */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: '#C9A84C' }}>Floor Plan — Level 1</span>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.4rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.2)' }}>1 : 100 Scale</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: '#C9A84C' }}>Floor Plan — Level 1</span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.2)', padding: '3px 8px', border: '1px solid rgba(248,244,238,0.08)' }}>Unit GS-14B</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.18)' }}>Scale 1 : 100</span>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 300, color: 'rgba(201,168,76,0.6)' }}>{totalFloor} m² net</span>
+          </div>
         </div>
 
-        <div style={{ background: 'rgba(248,244,238,0.02)', border: '1px solid rgba(248,244,238,0.06)', borderRadius: 4, padding: 'clamp(20px, 2.5vw, 32px)', marginBottom: 0 }}>
-          <svg viewBox="0 0 480 360" style={{ display: 'block', width: '100%' }}>
-            <rect x="30" y="20" width="420" height="320" rx="2" fill="none" stroke="rgba(201,168,76,0.2)" strokeWidth="8" />
-            {ROOMS.filter(r => r.id !== 'corridor').map(r => {
-              const isAct = activeRoom === r.id;
-              return (
-                <g key={r.id}>
-                  <rect x={r.x} y={r.y} width={r.w} height={r.h} rx="2"
-                    fill={isAct ? 'rgba(201,168,76,0.18)' : 'rgba(201,168,76,0.04)'}
-                    stroke={isAct ? '#C9A84C' : 'rgba(201,168,76,0.22)'}
-                    strokeWidth={isAct ? 2 : 1}
-                    style={{ cursor: 'pointer', transition: 'all 0.25s ease' }}
-                    onMouseEnter={() => setActiveRoom(r.id)}
-                    onMouseLeave={() => setActiveRoom(null)}
-                  />
-                  <text x={r.x + r.w / 2} y={r.y + r.h / 2 - 8} textAnchor="middle"
-                    style={{ fontSize: 8, fontFamily: 'var(--font-body)', fill: isAct ? 'rgba(201,168,76,0.9)' : 'rgba(201,168,76,0.35)', letterSpacing: '0.05em', textTransform: 'uppercase', pointerEvents: 'none', transition: 'fill 0.2s ease' }}>
-                    {r.label}
-                  </text>
-                  <text x={r.x + r.w / 2} y={r.y + r.h / 2 + 8} textAnchor="middle"
-                    style={{ fontSize: 7.5, fontFamily: 'var(--font-body)', fill: isAct ? 'rgba(248,244,238,0.75)' : 'rgba(248,244,238,0.2)', pointerEvents: 'none', transition: 'fill 0.2s ease' }}>
-                    {r.sqm} m²
-                  </text>
-                </g>
-              );
-            })}
-            <g transform="translate(440, 40)">
-              <circle cx="0" cy="0" r="14" fill="none" stroke="rgba(201,168,76,0.25)" strokeWidth="1" />
-              <path d="M0 -10 L-4 4 L0 1 L4 4 Z" fill="rgba(201,168,76,0.55)" />
-              <text y="6" textAnchor="middle" style={{ fontSize: 7, fill: 'rgba(201,168,76,0.45)', fontFamily: 'var(--font-body)' }}>N</text>
-            </g>
-          </svg>
+        {/* Legend */}
+        <div style={{ display: 'flex', gap: 20, marginBottom: 14, flexWrap: 'wrap' }}>
+          {[
+            { color: 'rgba(201,168,76,0.2)', label: 'Selected room' },
+            { color: 'rgba(201,168,76,0.08)', label: 'Interior space' },
+            { color: 'rgba(122,144,112,0.12)', label: 'Exterior / terrace' },
+            { color: 'rgba(248,244,238,0.25)', label: 'Windows' },
+          ].map(l => (
+            <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 14, height: 9, background: l.color, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 1 }} />
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.36rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.22)' }}>{l.label}</span>
+            </div>
+          ))}
+        </div>
 
-          {/* Room detail panel */}
-          <div style={{
-            marginTop: 16, padding: '18px 20px',
-            background: room ? 'rgba(201,168,76,0.06)' : 'rgba(248,244,238,0.02)',
-            border: `1px solid ${room ? 'rgba(201,168,76,0.18)' : 'rgba(248,244,238,0.05)'}`,
-            minHeight: 100,
-            transition: 'all 0.35s ease',
-          }}>
-            {room ? (
-              <>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.42em', textTransform: 'uppercase', color: '#C9A84C' }}>{room.label}</span>
-                  <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 300, color: '#F8F4EE' }}>{room.sqm} m²</span>
-                </div>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'rgba(248,244,238,0.42)', lineHeight: 1.7, marginBottom: 12 }}>{room.tip}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {room.materials.map((m, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 4, height: 4, background: '#C9A84C', borderRadius: '50%', flexShrink: 0 }} />
-                      <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.76rem', color: 'rgba(248,244,238,0.5)' }}>{m}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 80 }}>
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.18)' }}>
-                  Hover a room to inspect
-                </span>
-              </div>
-            )}
-          </div>
+        <div style={{ background: 'rgba(10,9,8,0.6)', border: '1px solid rgba(201,168,76,0.08)', padding: '8px 8px 4px' }}>
+          <FloorPlan activeRoom={activeRoom} setActiveRoom={setActiveRoom} />
+        </div>
+
+        {/* Room selector strip */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+          {FP_ROOMS.map(r => (
+            <button
+              key={r.id}
+              onClick={() => setActiveRoom(activeRoom === r.id ? null : r.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '5px 10px',
+                background: activeRoom === r.id ? 'rgba(201,168,76,0.12)' : 'transparent',
+                border: activeRoom === r.id ? '1px solid rgba(201,168,76,0.4)' : '1px solid rgba(248,244,238,0.07)',
+                cursor: 'pointer', transition: 'all 0.2s ease',
+              }}>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.35rem', letterSpacing: '0.15em', color: activeRoom === r.id ? '#C9A84C' : 'rgba(248,244,238,0.3)' }}>
+                {r.badge}
+              </span>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.4rem', letterSpacing: '0.15em', color: activeRoom === r.id ? '#F8F4EE' : 'rgba(248,244,238,0.4)' }}>
+                {r.label}
+              </span>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', color: 'rgba(248,244,238,0.2)' }}>
+                {r.sqm}m²
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Detail panel */}
+        <div style={{ marginTop: 12 }}>
+          <RoomDetailPanel room={room} />
         </div>
       </div>
 
-      {/* Right: Stats + Materials */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-
-        {/* Stats grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, background: 'rgba(248,244,238,0.05)', marginBottom: 40 }}>
+      {/* ── Stats grid ── */}
+      <div>
+        <h4 style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.5em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 'clamp(16px, 2vw, 24px)' }}>
+          Project Intelligence
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'rgba(248,244,238,0.05)' }}>
           {stats.map((stat, i) => (
-            <div key={i} style={{ background: '#0A0908', padding: 'clamp(18px, 2.5vw, 28px)', position: 'relative' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
+            <div key={i} style={{ background: '#0A0908', padding: 'clamp(16px, 2vw, 24px)', position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 5 }}>
                 <EditableText path={`bim.stats.${i}.value`} as="span"
-                  style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(2rem, 4vw, 3.8rem)', color: '#C9A84C', lineHeight: 1, letterSpacing: '-0.03em' }}>
+                  style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(1.8rem, 3vw, 3rem)', color: '#C9A84C', lineHeight: 1, letterSpacing: '-0.03em' }}>
                   {stat.value}
                 </EditableText>
                 <EditableText path={`bim.stats.${i}.unit`} as="span"
-                  style={{ fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.45)' }}>
+                  style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.4)' }}>
                   {stat.unit}
                 </EditableText>
               </div>
               <EditableText path={`bim.stats.${i}.label`} as="p"
-                style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.22)' }}>
+                style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.2)' }}>
                 {stat.label}
               </EditableText>
               {isEditMode && (
                 <button onClick={() => removeItem('bim.stats', i)}
-                  style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(220,50,50,0.12)', border: '1px solid rgba(220,50,50,0.25)', color: 'rgba(220,80,80,0.7)', fontSize: '0.32rem', letterSpacing: '0.2em', padding: '2px 6px', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>
+                  style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(220,50,50,0.12)', border: '1px solid rgba(220,50,50,0.25)', color: 'rgba(220,80,80,0.7)', fontSize: '0.3rem', padding: '2px 5px', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>
                   ×
                 </button>
               )}
@@ -383,44 +792,48 @@ function OverviewTab({ barsPct }: { barsPct: boolean }) {
         </div>
         {isEditMode && (
           <button onClick={() => addItem('bim.stats', { value: '0', unit: 'unit', label: 'New Stat' })}
-            style={{ marginBottom: 32, alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(201,168,76,0.08)', border: '1px dashed rgba(201,168,76,0.35)', color: '#C9A84C', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.35em', textTransform: 'uppercase', padding: '7px 14px', cursor: 'pointer' }}>
+            style={{ marginTop: 12, alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(201,168,76,0.08)', border: '1px dashed rgba(201,168,76,0.35)', color: '#C9A84C', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.35em', textTransform: 'uppercase', padding: '7px 14px', cursor: 'pointer' }}>
             + Add Stat
           </button>
         )}
+      </div>
 
-        {/* Material bars */}
+      {/* ── Material bars ── */}
+      <div>
         <h4 style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.5em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 'clamp(24px, 3vw, 36px)' }}>
           Material Specification
         </h4>
-        {materials.map((m, i) => (
-          <div key={i} style={{ marginBottom: 28, paddingBottom: 28, borderBottom: i < materials.length - 1 ? '1px solid rgba(248,244,238,0.05)' : 'none' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 10, gap: 12 }}>
-              <EditableText path={`bim.materials.${i}.label`} as="span"
-                style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'rgba(248,244,238,0.6)', lineHeight: 1.4 }}>
-                {m.label}
-              </EditableText>
-              <span style={{ display: 'flex', alignItems: 'baseline', gap: 2, flexShrink: 0 }}>
-                <EditableText path={`bim.materials.${i}.pct`} as="span" editStyle={{ minWidth: '2ch' }}
-                  style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(1.6rem, 2.8vw, 2.4rem)', color: m.color, lineHeight: 1, letterSpacing: '-0.03em' }}>
-                  {String(m.pct)}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px 48px' }}>
+          {materials.map((m, i) => (
+            <div key={i}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 8, gap: 12 }}>
+                <EditableText path={`bim.materials.${i}.label`} as="span"
+                  style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'rgba(248,244,238,0.55)', lineHeight: 1.4 }}>
+                  {m.label}
                 </EditableText>
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.6rem', color: m.color, opacity: 0.7 }}>%</span>
-              </span>
+                <span style={{ display: 'flex', alignItems: 'baseline', gap: 2, flexShrink: 0 }}>
+                  <EditableText path={`bim.materials.${i}.pct`} as="span" editStyle={{ minWidth: '2ch' }}
+                    style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(1.4rem, 2.5vw, 2rem)', color: m.color, lineHeight: 1, letterSpacing: '-0.03em' }}>
+                    {String(m.pct)}
+                  </EditableText>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.55rem', color: m.color, opacity: 0.7 }}>%</span>
+                </span>
+              </div>
+              <div style={{ height: 5, borderRadius: 2, background: 'rgba(248,244,238,0.05)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: barsPct ? `${m.pct}%` : '0%', background: `linear-gradient(90deg, ${m.color}55, ${m.color})`, borderRadius: 2, transition: `width 1.4s cubic-bezier(0.4,0,0.2,1) ${i * 180}ms` }} />
+              </div>
+              {isEditMode && (
+                <button onClick={() => removeItem('bim.materials', i)}
+                  style={{ marginTop: 4, background: 'rgba(220,50,50,0.08)', border: '1px solid rgba(220,50,50,0.2)', color: 'rgba(220,80,80,0.6)', fontFamily: 'var(--font-body)', fontSize: '0.3rem', letterSpacing: '0.2em', padding: '2px 6px', cursor: 'pointer' }}>
+                  × Remove
+                </button>
+              )}
             </div>
-            <div style={{ height: 6, borderRadius: 3, background: 'rgba(248,244,238,0.05)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: barsPct ? `${m.pct}%` : '0%', background: `linear-gradient(90deg, ${m.color}55, ${m.color})`, borderRadius: 3, transition: `width 1.4s cubic-bezier(0.4,0,0.2,1) ${i * 200}ms` }} />
-            </div>
-            {isEditMode && (
-              <button onClick={() => removeItem('bim.materials', i)}
-                style={{ marginTop: 6, background: 'rgba(220,50,50,0.08)', border: '1px solid rgba(220,50,50,0.22)', color: 'rgba(220,80,80,0.65)', fontFamily: 'var(--font-body)', fontSize: '0.32rem', letterSpacing: '0.22em', padding: '2px 7px', cursor: 'pointer' }}>
-                × Remove
-              </button>
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
         {isEditMode && (
           <button onClick={() => addItem('bim.materials', { label: 'New Material', pct: 50, color: '#C9A84C' })}
-            style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(201,168,76,0.08)', border: '1px dashed rgba(201,168,76,0.35)', color: '#C9A84C', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.35em', textTransform: 'uppercase', padding: '7px 14px', cursor: 'pointer' }}>
+            style={{ marginTop: 20, alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(201,168,76,0.08)', border: '1px dashed rgba(201,168,76,0.35)', color: '#C9A84C', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.35em', textTransform: 'uppercase', padding: '7px 14px', cursor: 'pointer' }}>
             + Add Material
           </button>
         )}
