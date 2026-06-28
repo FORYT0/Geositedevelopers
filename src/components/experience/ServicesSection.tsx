@@ -35,7 +35,7 @@ const SERVICES = [
       'Hospitality & F&B fit-out',
       'Multi-site rollout capability',
     ],
-    image:   'https://images.unsplash.com/photo-1497366412583-f9e4cf16ed95?w=1400&q=85&auto=format&fit=crop',
+    image:   'https://images.unsplash.com/photo-1625244724120-1fd1d34d00f6?w=1400&q=85&auto=format&fit=crop',
     accent:  '#C9A84C',
     flip:    true,
   },

@@ -90,7 +90,7 @@ const ELEMENTS = [
     category: 'Artwork',
     description: 'Large-scale abstract painting with geometric forms and subtle texture. Hand-painted on canvas with archival acrylics.',
     material: 'Acrylic on Canvas · Floating Wood Frame',
-    image: 'https://images.unsplash.com/photo-1547826039-a1ae4008de14?w=1400&q=90&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=1400&q=90&auto=format&fit=crop',
   },
   {
     id: 'plant',
@@ -99,7 +99,7 @@ const ELEMENTS = [
     category: 'Botanicals',
     description: 'Large fiddle leaf fig in a handcrafted ceramic planter. Brings life and natural scale to the interior composition.',
     material: 'Live Plant · Handcrafted Ceramic Planter',
-    image: 'https://images.unsplash.com/photo-1545165375-1b744b9fe5b4?w=1400&q=90&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1459156212016-c812468e2115?w=1400&q=90&auto=format&fit=crop',
   },
   {
     id: 'rug',
