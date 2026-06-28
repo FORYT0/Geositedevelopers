@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useAdmin } from '@/src/contexts/AdminContext';
 
 /* ─── Data ─────────────────────────────────────────────────── */
 const FOOTER_LINKS: Record<string, string[]> = {
@@ -98,6 +99,7 @@ function FooterLink({ label }: { label: string }) {
 export function FooterSection() {
   const [email,     setEmail]     = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const { isAdmin, openLogin, toggleEditMode, isEditMode } = useAdmin();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -488,6 +490,75 @@ export function FooterSection() {
                 {links.map(link => (
                   <FooterLink key={link} label={link} />
                 ))}
+
+                {/* Admin login button — only in Studio column */}
+                {group === 'Studio' && (
+                  <div style={{ marginTop: 8, paddingTop: 16, borderTop: '1px solid rgba(201,168,76,0.08)' }}>
+                    {isAdmin ? (
+                      <button
+                        onClick={toggleEditMode}
+                        style={{
+                          display:       'flex',
+                          alignItems:    'center',
+                          gap:           8,
+                          background:    'none',
+                          border:        '1px solid rgba(201,168,76,0.25)',
+                          padding:       '8px 14px',
+                          cursor:        'pointer',
+                          fontFamily:    'var(--font-body)',
+                          fontSize:      '0.38rem',
+                          letterSpacing: '0.38em',
+                          textTransform: 'uppercase',
+                          color:         isEditMode ? '#C9A84C' : 'rgba(201,168,76,0.45)',
+                          transition:    'color 0.25s ease, border-color 0.25s ease',
+                        }}
+                        onMouseEnter={e => {
+                          const el = e.currentTarget as HTMLElement;
+                          el.style.color       = '#C9A84C';
+                          el.style.borderColor = 'rgba(201,168,76,0.55)';
+                        }}
+                        onMouseLeave={e => {
+                          const el = e.currentTarget as HTMLElement;
+                          el.style.color       = isEditMode ? '#C9A84C' : 'rgba(201,168,76,0.45)';
+                          el.style.borderColor = 'rgba(201,168,76,0.25)';
+                        }}
+                      >
+                        <svg viewBox="0 0 14 14" fill="none" width="11" height="11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M10 6H4V10.5H10V6Z"/>
+                          <path d="M5 6V4.5a2 2 0 1 1 4 0V6"/>
+                        </svg>
+                        {isEditMode ? 'Editing On' : 'Edit Mode'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={openLogin}
+                        style={{
+                          display:       'flex',
+                          alignItems:    'center',
+                          gap:           8,
+                          background:    'none',
+                          border:        'none',
+                          padding:       0,
+                          cursor:        'pointer',
+                          fontFamily:    'var(--font-body)',
+                          fontSize:      '0.38rem',
+                          letterSpacing: '0.38em',
+                          textTransform: 'uppercase',
+                          color:         'rgba(201,168,76,0.22)',
+                          transition:    'color 0.25s ease',
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(201,168,76,0.6)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(201,168,76,0.22)'; }}
+                      >
+                        <svg viewBox="0 0 14 14" fill="none" width="11" height="11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M10 6H4V10.5H10V6Z"/>
+                          <path d="M5 6V4.5a2 2 0 1 1 4 0V6"/>
+                        </svg>
+                        Admin Login
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ))}
