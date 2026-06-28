@@ -63,6 +63,7 @@ const ELEMENTS = [
     category: 'Furniture',
     description: 'Contemporary modular sofa with deep seating and premium velvet upholstery. Features customizable configuration and hidden storage compartments.',
     material: 'Premium Velvet · Solid Oak Frame · High-Density Foam',
+    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1400&q=90&auto=format&fit=crop',
   },
   {
     id: 'lighting',
@@ -71,6 +72,7 @@ const ELEMENTS = [
     category: 'Lighting',
     description: 'Sleek arc floor lamp with marble base and brushed brass finish. Adjustable height and dimmable LED provides warm ambient lighting.',
     material: 'Marble Base · Brushed Brass · LED Technology',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1400&q=90&auto=format&fit=crop',
   },
   {
     id: 'coffee-table',
@@ -79,6 +81,7 @@ const ELEMENTS = [
     category: 'Furniture',
     description: 'Minimalist coffee table with tempered glass top and walnut legs. A lower shelf adds function without sacrificing form.',
     material: 'Tempered Glass · Walnut Wood · Metal Hardware',
+    image: 'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=1400&q=90&auto=format&fit=crop',
   },
   {
     id: 'art',
@@ -87,6 +90,7 @@ const ELEMENTS = [
     category: 'Artwork',
     description: 'Large-scale abstract painting with geometric forms and subtle texture. Hand-painted on canvas with archival acrylics.',
     material: 'Acrylic on Canvas · Floating Wood Frame',
+    image: 'https://images.unsplash.com/photo-1547826039-a1ae4008de14?w=1400&q=90&auto=format&fit=crop',
   },
   {
     id: 'plant',
@@ -95,6 +99,7 @@ const ELEMENTS = [
     category: 'Botanicals',
     description: 'Large fiddle leaf fig in a handcrafted ceramic planter. Brings life and natural scale to the interior composition.',
     material: 'Live Plant · Handcrafted Ceramic Planter',
+    image: 'https://images.unsplash.com/photo-1545165375-1b744b9fe5b4?w=1400&q=90&auto=format&fit=crop',
   },
   {
     id: 'rug',
@@ -103,6 +108,7 @@ const ELEMENTS = [
     category: 'Textiles',
     description: 'New Zealand wool rug with a subtle geometric pattern. Defines the conversation zone and anchors the entire space.',
     material: 'NZ Wool · Cotton Backing · Natural Dyes',
+    image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1400&q=90&auto=format&fit=crop',
   },
 ];
 
@@ -169,23 +175,29 @@ export function SuiteSection() {
           marginTop:           40,
         }}
       >
-        {/* Left: image panel */}
+        {/* Left: image panel — cross-fades per element */}
         <div style={{ position: 'relative', overflow: 'hidden', minHeight: 520 }}>
-          <img
-            src="/renders/Luxurious presidential suite Infinity feel 1.png"
-            alt="Presidential Suite — Interior Design"
-            draggable={false}
-            style={{
-              position:       'absolute',
-              inset:          0,
-              width:          '100%',
-              height:         '100%',
-              objectFit:      'cover',
-              objectPosition: 'center',
-              transform:      revealed ? 'scale(1)' : 'scale(1.05)',
-              transition:     'transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            }}
-          />
+          {ELEMENTS.map((el, i) => (
+            <img
+              key={el.id}
+              src={el.image}
+              alt={el.label}
+              draggable={false}
+              style={{
+                position:       'absolute',
+                inset:          0,
+                width:          '100%',
+                height:         '100%',
+                objectFit:      'cover',
+                objectPosition: 'center',
+                opacity:        i === activeIdx ? 1 : 0,
+                transform:      i === activeIdx
+                  ? (revealed ? 'scale(1)' : 'scale(1.05)')
+                  : 'scale(1.04)',
+                transition:     'opacity 0.75s ease, transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              }}
+            />
+          ))}
           {/* Right-side fade to dark (blends into list panel) */}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, transparent 50%, rgba(8,8,6,0.55) 100%)' }} />
           {/* Bottom fade */}
