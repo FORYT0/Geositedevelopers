@@ -1,64 +1,16 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
-
-/* ─── Real before/after pairs from /public/renders/ ─────────────
-   Before = actual 3D model / Rhino / BIM wireframe screenshots
-   After  = photorealistic final render of the same space
-──────────────────────────────────────────────────────────────── */
-const SPACES = [
-  {
-    id:       'nova-reception',
-    label:    'NOVA Atelier Reception',
-    location: 'Commercial Interior · Nairobi',
-    before:   '/renders/NOVA Atelica Reception rhino.png',
-    after:    '/renders/NOVA Atelica Reception render 1.png',
-    quote:    'The sinusoidal light wall was our boldest brief — Geosite delivered it flawlessly.',
-    client:   'NOVA Atelier',
-  },
-  {
-    id:       'blue-spiral-tower',
-    label:    'Blue Spiral Tower',
-    location: 'Mixed-Use Development · Karen',
-    before:   '/renders/Blue Spiral Hotel Ground.jpg',
-    after:    '/renders/Blue Spiral Hotel Ground full render.png',
-    quote:    'From structural model to finished landmark — the process was seamless.',
-    client:   'Arch. Kariuki',
-  },
-  {
-    id:       'ade-living',
-    label:    'Ade Residence — Living Room',
-    location: 'Residential Interior · Runda',
-    before:   '/renders/Screenshot 2024-11-26 144316.png',
-    after:    '/renders/Ade Int_13 - Photo.jpg',
-    quote:    'They transformed our vision into a living, breathing space.',
-    client:   'Amara O.',
-  },
-  {
-    id:       'hotel-corridor',
-    label:    'Hotel Ground Floor',
-    location: 'Hospitality · Westlands',
-    before:   '/renders/Screenshot 2026-04-07 163957.png',
-    after:    '/renders/Blue Spiral Hotel Entrance Final.png',
-    quote:    'The BIM walkthrough gave us total confidence before a nail was hammered.',
-    client:   'James & Wanjiru N.',
-  },
-  {
-    id:       'presidential-suite',
-    label:    'Presidential Suite',
-    location: 'Luxury Suite · Westlands',
-    before:   '/renders/Screenshot 2026-04-15 162323.png',
-    after:    '/renders/Luxurious presidential suite Infinity feel 1.png',
-    quote:    'Geosite turned our concept sketch into a living masterpiece.',
-    client:   'Amara K.',
-  },
-];
+import { useAdmin } from '@/src/contexts/AdminContext';
+import { EditableText } from '@/src/components/admin/EditableText';
+import { EditableImage } from '@/src/components/admin/EditableImage';
+import type { BeforeAfterSpace } from '@/src/lib/site-content';
 
 /* ─── Slider ─────────────────────────────────────────────────── */
-function Slider({ space }: { space: (typeof SPACES)[0] }) {
-  const containerRef            = useRef<HTMLDivElement>(null);
-  const [pct, setPct]           = useState(50);
-  const [locked, setLocked]     = useState(false);
-  const lockedRef               = useRef(false);
+function Slider({ space }: { space: BeforeAfterSpace }) {
+  const containerRef        = useRef<HTMLDivElement>(null);
+  const [pct, setPct]       = useState(50);
+  const [locked, setLocked] = useState(false);
+  const lockedRef           = useRef(false);
 
   const getPercent = useCallback((clientX: number) => {
     if (!containerRef.current) return 50;
@@ -68,7 +20,6 @@ function Slider({ space }: { space: (typeof SPACES)[0] }) {
 
   useEffect(() => { lockedRef.current = locked; }, [locked]);
 
-  // Reset lock when off-screen
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([e]) => { if (!e.isIntersecting) setLocked(false); },
@@ -78,7 +29,6 @@ function Slider({ space }: { space: (typeof SPACES)[0] }) {
     return () => obs.disconnect();
   }, []);
 
-  // Touch drag
   useEffect(() => {
     const onTouchMove = (e: TouchEvent) => {
       e.preventDefault();
@@ -122,112 +72,37 @@ function Slider({ space }: { space: (typeof SPACES)[0] }) {
         cursor:     locked ? 'col-resize' : 'crosshair',
       }}
     >
-      {/* ── BEFORE: real 3D model / wireframe screenshot ── */}
+      {/* BEFORE */}
       <img
         src={space.before}
         alt="3D Model — Before"
         draggable={false}
-        style={{
-          position:       'absolute',
-          inset:          0,
-          width:          '100%',
-          height:         '100%',
-          objectFit:      'cover',
-          objectPosition: 'center',
-        }}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
       />
 
-      {/* ── AFTER: photorealistic render, clipped to left of divider ── */}
-      <div
-        style={{
-          position: 'absolute',
-          inset:    0,
-          overflow: 'hidden',
-          clipPath: `inset(0 ${100 - pct}% 0 0)`,
-        }}
-      >
+      {/* AFTER */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', clipPath: `inset(0 ${100 - pct}% 0 0)` }}>
         <img
           src={space.after}
           alt="Photorealistic Render — After"
           draggable={false}
-          style={{
-            width:          '100%',
-            height:         '100%',
-            objectFit:      'cover',
-            objectPosition: 'center',
-          }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
         />
       </div>
 
-      {/* ── Before label ── */}
-      <div
-        style={{
-          position:       'absolute',
-          top:            20,
-          left:           20,
-          padding:        '7px 16px',
-          fontFamily:     'var(--font-body)',
-          fontSize:       '0.48rem',
-          letterSpacing:  '0.42em',
-          textTransform:  'uppercase',
-          background:     'rgba(22,22,22,0.72)',
-          border:         '1px solid rgba(255,255,255,0.15)',
-          color:          'rgba(248,244,238,0.78)',
-          backdropFilter: 'blur(8px)',
-          opacity:        pct < 88 ? 1 : 0,
-          transition:     'opacity 0.3s ease',
-          pointerEvents:  'none',
-        }}
-      >
+      {/* Before label */}
+      <div style={{ position: 'absolute', top: 20, left: 20, padding: '7px 16px', fontFamily: 'var(--font-body)', fontSize: '0.48rem', letterSpacing: '0.42em', textTransform: 'uppercase', background: 'rgba(22,22,22,0.72)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(248,244,238,0.78)', backdropFilter: 'blur(8px)', opacity: pct < 88 ? 1 : 0, transition: 'opacity 0.3s ease', pointerEvents: 'none' }}>
         3D Model
       </div>
 
-      {/* ── After label ── */}
-      <div
-        style={{
-          position:       'absolute',
-          top:            20,
-          right:          20,
-          padding:        '7px 16px',
-          fontFamily:     'var(--font-body)',
-          fontSize:       '0.48rem',
-          letterSpacing:  '0.42em',
-          textTransform:  'uppercase',
-          background:     'rgba(10,10,10,0.72)',
-          border:         '1px solid rgba(201,168,76,0.45)',
-          color:          '#C9A84C',
-          backdropFilter: 'blur(8px)',
-          opacity:        pct > 12 ? 1 : 0,
-          transition:     'opacity 0.3s ease',
-          pointerEvents:  'none',
-        }}
-      >
+      {/* After label */}
+      <div style={{ position: 'absolute', top: 20, right: 20, padding: '7px 16px', fontFamily: 'var(--font-body)', fontSize: '0.48rem', letterSpacing: '0.42em', textTransform: 'uppercase', background: 'rgba(10,10,10,0.72)', border: '1px solid rgba(201,168,76,0.45)', color: '#C9A84C', backdropFilter: 'blur(8px)', opacity: pct > 12 ? 1 : 0, transition: 'opacity 0.3s ease', pointerEvents: 'none' }}>
         Final Render
       </div>
 
-      {/* ── Lock indicator ── */}
+      {/* Lock indicator */}
       {locked && (
-        <div
-          style={{
-            position:       'absolute',
-            bottom:         20,
-            left:           '50%',
-            transform:      'translateX(-50%)',
-            padding:        '6px 14px',
-            fontFamily:     'var(--font-body)',
-            fontSize:       '0.44rem',
-            letterSpacing:  '0.4em',
-            textTransform:  'uppercase',
-            background:     'rgba(201,168,76,0.15)',
-            border:         '1px solid rgba(201,168,76,0.4)',
-            color:          '#C9A84C',
-            backdropFilter: 'blur(10px)',
-            display:        'flex',
-            alignItems:     'center',
-            gap:            8,
-            pointerEvents:  'none',
-          }}
-        >
+        <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', padding: '6px 14px', fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.4em', textTransform: 'uppercase', background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.4)', color: '#C9A84C', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'none' }}>
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <rect x="2" y="4" width="6" height="5" rx="0.5" stroke="#C9A84C" strokeWidth="1"/>
             <path d="M3.5 4 V3 A1.5 1.5 0 0 1 6.5 3 V4" stroke="#C9A84C" strokeWidth="1"/>
@@ -236,38 +111,11 @@ function Slider({ space }: { space: (typeof SPACES)[0] }) {
         </div>
       )}
 
-      {/* ── Divider line ── */}
-      <div
-        style={{
-          position:      'absolute',
-          top:           0,
-          bottom:        0,
-          left:          `${pct}%`,
-          width:         1,
-          background:    'rgba(255,255,255,0.92)',
-          boxShadow:     '0 0 14px rgba(255,255,255,0.45)',
-          pointerEvents: 'none',
-        }}
-      />
+      {/* Divider */}
+      <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${pct}%`, width: 1, background: 'rgba(255,255,255,0.92)', boxShadow: '0 0 14px rgba(255,255,255,0.45)', pointerEvents: 'none' }} />
 
-      {/* ── Drag handle ── */}
-      <div
-        style={{
-          position:       'absolute',
-          top:            '50%',
-          left:           `${pct}%`,
-          transform:      'translate(-50%, -50%)',
-          width:          46,
-          height:         46,
-          borderRadius:   '50%',
-          background:     'rgba(255,255,255,0.97)',
-          boxShadow:      '0 4px 24px rgba(0,0,0,0.32)',
-          display:        'flex',
-          alignItems:     'center',
-          justifyContent: 'center',
-          pointerEvents:  'none',
-        }}
-      >
+      {/* Handle */}
+      <div style={{ position: 'absolute', top: '50%', left: `${pct}%`, transform: 'translate(-50%, -50%)', width: 46, height: 46, borderRadius: '50%', background: 'rgba(255,255,255,0.97)', boxShadow: '0 4px 24px rgba(0,0,0,0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <path d="M6 4l-4 5 4 5M12 4l4 5-4 5" stroke="#0D0D0D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
@@ -282,6 +130,9 @@ export function BeforeAfterSection() {
   const [revealed, setRevealed] = useState(false);
   const [entering, setEntering] = useState(false);
   const sectionRef              = useRef<HTMLElement>(null);
+
+  const { isEditMode, content, removeItem, addItem } = useAdmin();
+  const spaces = content.beforeAfter.spaces;
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -302,16 +153,158 @@ export function BeforeAfterSection() {
 
   const goPrev = (e: React.MouseEvent) => {
     e.stopPropagation();
-    goTo((active - 1 + SPACES.length) % SPACES.length);
+    goTo((active - 1 + spaces.length) % spaces.length);
   };
 
   const goNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    goTo((active + 1) % SPACES.length);
+    goTo((active + 1) % spaces.length);
   };
 
-  const space = SPACES[active];
+  const safeActive = Math.min(active, spaces.length - 1);
+  const space = spaces[safeActive] ?? spaces[0];
 
+  /* ── Edit mode: show all spaces as a list ── */
+  if (isEditMode) {
+    return (
+      <section
+        id="before-after"
+        ref={sectionRef}
+        style={{ position: 'relative', width: '100%', background: '#F2EDE6', overflow: 'hidden', padding: 'clamp(64px, 8vw, 120px) 0' }}
+      >
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 clamp(24px, 5vw, 64px)' }}>
+
+          {/* Section header edit */}
+          <div style={{ marginBottom: 48 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+              <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, #B08422, transparent)' }} />
+              <EditableText
+                path="beforeAfter.eyebrow"
+                as="span"
+                style={{ fontFamily: 'var(--font-body)', fontSize: '0.52rem', letterSpacing: '0.55em', textTransform: 'uppercase', color: '#B08422' }}
+              >
+                {content.beforeAfter.eyebrow}
+              </EditableText>
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(2.4rem, 5vw, 5rem)', color: '#1A1614', letterSpacing: '-0.02em', lineHeight: 0.93 }}>
+              <EditableText path="beforeAfter.heading" as="span">
+                {content.beforeAfter.heading}
+              </EditableText>
+              <br />
+              <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>
+                <EditableText path="beforeAfter.headingGold" as="span">
+                  {content.beforeAfter.headingGold}
+                </EditableText>
+              </em>
+            </h2>
+          </div>
+
+          {/* Spaces list */}
+          {spaces.map((sp, i) => (
+            <div
+              key={i}
+              style={{
+                background:   'rgba(255,255,255,0.7)',
+                border:       '1px solid rgba(176,132,34,0.15)',
+                marginBottom: 28,
+                padding:      '24px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <EditableText
+                    path={`beforeAfter.spaces.${i}.label`}
+                    as="p"
+                    style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(1.2rem, 2vw, 1.8rem)', color: '#1A1614', letterSpacing: '-0.01em' }}
+                  >
+                    {sp.label}
+                  </EditableText>
+                  <EditableText
+                    path={`beforeAfter.spaces.${i}.location`}
+                    as="p"
+                    style={{ fontFamily: 'var(--font-body)', fontSize: '0.46rem', letterSpacing: '0.42em', textTransform: 'uppercase', color: '#B08422' }}
+                  >
+                    {sp.location}
+                  </EditableText>
+                </div>
+                <button
+                  onClick={() => removeItem('beforeAfter.spaces', i)}
+                  style={{ background: 'rgba(220,50,50,0.1)', border: '1px solid rgba(220,50,50,0.3)', color: 'rgba(220,80,80,0.8)', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.3em', textTransform: 'uppercase', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}
+                >
+                  × Remove
+                </button>
+              </div>
+
+              {/* Before/After image editors */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                <div>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(176,132,34,0.6)', marginBottom: 8 }}>Before (3D Model)</p>
+                  <div style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden' }}>
+                    <EditableImage
+                      path={`beforeAfter.spaces.${i}.before`}
+                      src={sp.before}
+                      alt="Before"
+                      draggable={false}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(176,132,34,0.6)', marginBottom: 8 }}>After (Final Render)</p>
+                  <div style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden' }}>
+                    <EditableImage
+                      path={`beforeAfter.spaces.${i}.after`}
+                      src={sp.after}
+                      alt="After"
+                      draggable={false}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Quote / client */}
+              <div style={{ borderTop: '1px solid rgba(176,132,34,0.12)', paddingTop: 16 }}>
+                <EditableText
+                  path={`beforeAfter.spaces.${i}.quote`}
+                  as="p"
+                  multiline
+                  style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 300, fontSize: 'clamp(0.88rem, 1.3vw, 1rem)', color: '#3A2F28', marginBottom: 8 }}
+                >
+                  {sp.quote}
+                </EditableText>
+                <EditableText
+                  path={`beforeAfter.spaces.${i}.client`}
+                  as="span"
+                  style={{ fontFamily: 'var(--font-body)', fontSize: '0.46rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: '#B08422' }}
+                >
+                  {sp.client}
+                </EditableText>
+              </div>
+            </div>
+          ))}
+
+          {/* Add space */}
+          <button
+            onClick={() => addItem('beforeAfter.spaces', {
+              id:       `space-${Date.now()}`,
+              label:    'New Project',
+              location: 'Project Type · Location',
+              before:   '/renders/NOVA Atelica Reception rhino.png',
+              after:    '/renders/NOVA Atelica Reception render 1.png',
+              quote:    'Client testimonial quote goes here.',
+              client:   'Client Name',
+            })}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(201,168,76,0.08)', border: '1px dashed rgba(176,132,34,0.35)', color: '#B08422', fontFamily: 'var(--font-body)', fontSize: '0.4rem', letterSpacing: '0.4em', textTransform: 'uppercase', padding: '10px 18px', cursor: 'pointer' }}
+          >
+            + Add Project
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  /* ── View mode ── */
   return (
     <section
       id="before-after"
@@ -338,22 +331,13 @@ export function BeforeAfterSection() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
               <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, #B08422, transparent)' }} />
               <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.52rem', letterSpacing: '0.55em', textTransform: 'uppercase', color: '#B08422' }}>
-                Project Transformations
+                {content.beforeAfter.eyebrow}
               </span>
             </div>
-            <h2
-              style={{
-                fontFamily:    'var(--font-display)',
-                fontWeight:    300,
-                fontSize:      'clamp(2.4rem, 5vw, 5rem)',
-                color:         '#1A1614',
-                letterSpacing: '-0.02em',
-                lineHeight:    0.93,
-              }}
-            >
-              Model to
+            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(2.4rem, 5vw, 5rem)', color: '#1A1614', letterSpacing: '-0.02em', lineHeight: 0.93 }}>
+              {content.beforeAfter.heading}
               <br />
-              <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>Reality</em>
+              <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>{content.beforeAfter.headingGold}</em>
             </h2>
           </div>
 
@@ -362,37 +346,16 @@ export function BeforeAfterSection() {
             <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.46rem', letterSpacing: '0.42em', textTransform: 'uppercase', color: '#B08422' }}>
               {space.location}
             </p>
-            <p
-              style={{
-                fontFamily:    'var(--font-display)',
-                fontWeight:    300,
-                fontSize:      'clamp(1.2rem, 2.5vw, 2rem)',
-                color:         '#1A1614',
-                letterSpacing: '-0.01em',
-                opacity:       entering ? 0 : 1,
-                transform:     entering ? 'translateY(8px)' : 'translateY(0)',
-                transition:    'opacity 0.26s ease, transform 0.26s ease',
-              }}
-            >
+            <p style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(1.2rem, 2.5vw, 2rem)', color: '#1A1614', letterSpacing: '-0.01em', opacity: entering ? 0 : 1, transform: entering ? 'translateY(8px)' : 'translateY(0)', transition: 'opacity 0.26s ease, transform 0.26s ease' }}>
               {space.label}
             </p>
-            {/* Progress pips */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-              {SPACES.map((_, i) => (
+              {spaces.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => goTo(i)}
                   aria-label={`Space ${i + 1}`}
-                  style={{
-                    width:        i === active ? 22 : 6,
-                    height:       6,
-                    borderRadius: 3,
-                    background:   i === active ? '#B08422' : 'rgba(176,132,34,0.22)',
-                    border:       'none',
-                    padding:      0,
-                    cursor:       'pointer',
-                    transition:   'width 0.35s ease, background 0.35s ease',
-                  }}
+                  style={{ width: i === safeActive ? 22 : 6, height: 6, borderRadius: 3, background: i === safeActive ? '#B08422' : 'rgba(176,132,34,0.22)', border: 'none', padding: 0, cursor: 'pointer', transition: 'width 0.35s ease, background 0.35s ease' }}
                 />
               ))}
             </div>
@@ -412,37 +375,9 @@ export function BeforeAfterSection() {
           <button
             onClick={goPrev}
             aria-label="Previous project"
-            style={{
-              position:       'absolute',
-              left:           0,
-              top:            '50%',
-              transform:      'translateY(-50%)',
-              zIndex:         20,
-              width:          52,
-              height:         52,
-              borderRadius:   '50%',
-              background:     'rgba(250,249,246,0.95)',
-              border:         '1px solid rgba(176,132,34,0.25)',
-              cursor:         'pointer',
-              display:        'flex',
-              alignItems:     'center',
-              justifyContent: 'center',
-              boxShadow:      '0 4px 20px rgba(0,0,0,0.14)',
-              transition:     'background 0.25s ease, border-color 0.25s ease, transform 0.25s ease',
-              marginLeft:     -26,
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background  = '#B08422';
-              el.style.borderColor = '#B08422';
-              el.style.transform   = 'translateY(-50%) scale(1.08)';
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background  = 'rgba(250,249,246,0.95)';
-              el.style.borderColor = 'rgba(176,132,34,0.25)';
-              el.style.transform   = 'translateY(-50%)';
-            }}
+            style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 20, width: 52, height: 52, borderRadius: '50%', background: 'rgba(250,249,246,0.95)', border: '1px solid rgba(176,132,34,0.25)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.14)', transition: 'background 0.25s ease, border-color 0.25s ease, transform 0.25s ease', marginLeft: -26 }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = '#B08422'; el.style.borderColor = '#B08422'; el.style.transform = 'translateY(-50%) scale(1.08)'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(250,249,246,0.95)'; el.style.borderColor = 'rgba(176,132,34,0.25)'; el.style.transform = 'translateY(-50%)'; }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M10 3 L5 8 L10 13" stroke="#1A1614" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -453,37 +388,9 @@ export function BeforeAfterSection() {
           <button
             onClick={goNext}
             aria-label="Next project"
-            style={{
-              position:       'absolute',
-              right:          0,
-              top:            '50%',
-              transform:      'translateY(-50%)',
-              zIndex:         20,
-              width:          52,
-              height:         52,
-              borderRadius:   '50%',
-              background:     'rgba(250,249,246,0.95)',
-              border:         '1px solid rgba(176,132,34,0.25)',
-              cursor:         'pointer',
-              display:        'flex',
-              alignItems:     'center',
-              justifyContent: 'center',
-              boxShadow:      '0 4px 20px rgba(0,0,0,0.14)',
-              transition:     'background 0.25s ease, border-color 0.25s ease, transform 0.25s ease',
-              marginRight:    -26,
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background  = '#B08422';
-              el.style.borderColor = '#B08422';
-              el.style.transform   = 'translateY(-50%) scale(1.08)';
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background  = 'rgba(250,249,246,0.95)';
-              el.style.borderColor = 'rgba(176,132,34,0.25)';
-              el.style.transform   = 'translateY(-50%)';
-            }}
+            style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 20, width: 52, height: 52, borderRadius: '50%', background: 'rgba(250,249,246,0.95)', border: '1px solid rgba(176,132,34,0.25)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.14)', transition: 'background 0.25s ease, border-color 0.25s ease, transform 0.25s ease', marginRight: -26 }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = '#B08422'; el.style.borderColor = '#B08422'; el.style.transform = 'translateY(-50%) scale(1.08)'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(250,249,246,0.95)'; el.style.borderColor = 'rgba(176,132,34,0.25)'; el.style.transform = 'translateY(-50%)'; }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M6 3 L11 8 L6 13" stroke="#1A1614" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -510,15 +417,11 @@ export function BeforeAfterSection() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 28, height: 16, borderRadius: 2, background: 'rgba(30,30,30,0.18)', border: '1px solid rgba(255,255,255,0.3)' }} />
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.38em', textTransform: 'uppercase', color: '#7A6E60' }}>
-                3D Model
-              </span>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.38em', textTransform: 'uppercase', color: '#7A6E60' }}>3D Model</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 28, height: 16, borderRadius: 2, background: 'rgba(201,168,76,0.18)', border: '1px solid rgba(201,168,76,0.5)' }} />
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.38em', textTransform: 'uppercase', color: '#7A6E60' }}>
-                Final Render
-              </span>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.38em', textTransform: 'uppercase', color: '#7A6E60' }}>Final Render</span>
             </div>
           </div>
 
@@ -534,7 +437,7 @@ export function BeforeAfterSection() {
             }}
           >
             <p style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 300, fontSize: 'clamp(0.95rem, 1.4vw, 1.1rem)', color: '#3A2F28', marginBottom: 8 }}>
-              "{space.quote}"
+              &ldquo;{space.quote}&rdquo;
             </p>
             <cite style={{ fontFamily: 'var(--font-body)', fontSize: '0.48rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: '#B08422', fontStyle: 'normal' }}>
               — {space.client}

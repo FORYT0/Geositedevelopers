@@ -1,41 +1,16 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-
-const STEPS = [
-  {
-    number:      '01',
-    title:       'Discovery',
-    subtitle:    'Understanding Your Vision',
-    description: 'We begin with an in-depth consultation to understand your lifestyle, aesthetic preferences, and spatial goals. Every detail matters — from morning rituals to entertaining habits.',
-    image:       'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=85&auto=format&fit=crop',
-  },
-  {
-    number:      '02',
-    title:       'Concept',
-    subtitle:    'Design Proposals',
-    description: 'Our designers craft multiple bespoke concepts tailored specifically to your space. You receive mood boards, material palettes, and layout options — each a distinct design narrative.',
-    image:       'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1200&q=85&auto=format&fit=crop',
-  },
-  {
-    number:      '03',
-    title:       'Visualise',
-    subtitle:    '3D & BIM Rendering',
-    description: 'Walk through photorealistic 3D renders and BIM models of your space before a single nail is hammered. Experience your new home virtually — lighting, materials, and all.',
-    image:       'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85&auto=format&fit=crop',
-  },
-  {
-    number:      '04',
-    title:       'Deliver',
-    subtitle:    'Flawless Execution',
-    description: 'Our trusted network of craftsmen and project managers bring the vision to life with surgical precision. We handle procurement, installation, and final styling — you simply arrive.',
-    image:       'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200&q=85&auto=format&fit=crop',
-  },
-];
+import { useAdmin } from '@/src/contexts/AdminContext';
+import { EditableText } from '@/src/components/admin/EditableText';
+import { EditableImage } from '@/src/components/admin/EditableImage';
 
 export function ProcessSection() {
   const [active,   setActive]   = useState(0);
   const [revealed, setRevealed] = useState(false);
   const sectionRef              = useRef<HTMLElement>(null);
+  const { isEditMode, content, removeItem, addItem } = useAdmin();
+
+  const steps = content.process.steps;
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -55,10 +30,10 @@ export function ProcessSection() {
       {/* Very subtle noise texture overlay */}
       <div
         style={{
-          position:   'absolute',
-          inset:      0,
+          position:      'absolute',
+          inset:         0,
           pointerEvents: 'none',
-          background: 'radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.04) 0%, transparent 65%)',
+          background:    'radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.04) 0%, transparent 65%)',
         }}
       />
 
@@ -81,7 +56,9 @@ export function ProcessSection() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
             <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)' }} />
-            <span
+            <EditableText
+              path="process.eyebrow"
+              as="span"
               style={{
                 fontFamily:    'var(--font-body)',
                 fontSize:      '0.52rem',
@@ -90,8 +67,8 @@ export function ProcessSection() {
                 color:         '#C9A84C',
               }}
             >
-              How We Work
-            </span>
+              {content.process.eyebrow}
+            </EditableText>
           </div>
           <h2
             style={{
@@ -103,9 +80,15 @@ export function ProcessSection() {
               lineHeight:    0.91,
             }}
           >
-            Our Design
+            <EditableText path="process.heading" as="span" style={{ display: 'block' }}>
+              {content.process.heading}
+            </EditableText>
             <br />
-            <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>Process</em>
+            <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>
+              <EditableText path="process.headingGold" as="span">
+                {content.process.headingGold}
+              </EditableText>
+            </em>
           </h2>
         </div>
 
@@ -113,7 +96,7 @@ export function ProcessSection() {
         <div
           style={{
             display:             'grid',
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: isEditMode ? '1fr' : '1fr 1fr',
             gap:                 80,
             alignItems:          'start',
           }}
@@ -125,18 +108,17 @@ export function ProcessSection() {
               transition: 'opacity 0.9s ease 0.18s',
             }}
           >
-            {STEPS.map((step, i) => {
+            {steps.map((step, i) => {
               const isActive = i === active;
               return (
                 <div
-                  key={step.number}
-                  style={{ position: 'relative', cursor: 'pointer' }}
-                  onMouseEnter={() => setActive(i)}
-                  onClick={() => setActive(i)}
+                  key={i}
+                  style={{ position: 'relative', cursor: isEditMode ? 'default' : 'pointer' }}
+                  onMouseEnter={() => { if (!isEditMode) setActive(i); }}
+                  onClick={() => { if (!isEditMode) setActive(i); }}
                 >
                   {/* Top border */}
                   <div style={{ position: 'relative', height: 1, background: 'rgba(248,244,238,0.08)' }}>
-                    {/* Gold progress line that expands when active */}
                     <div
                       style={{
                         position:   'absolute',
@@ -150,11 +132,13 @@ export function ProcessSection() {
                     />
                   </div>
 
-                  <div style={{ padding: '28px 0 28px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
+                  <div style={{ padding: '28px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 20 }}>
                         {/* Number */}
-                        <span
+                        <EditableText
+                          path={`process.steps.${i}.number`}
+                          as="span"
                           style={{
                             fontFamily:    'var(--font-body)',
                             fontSize:      '0.5rem',
@@ -166,10 +150,12 @@ export function ProcessSection() {
                           }}
                         >
                           {step.number}
-                        </span>
+                        </EditableText>
 
                         {/* Title */}
-                        <h3
+                        <EditableText
+                          path={`process.steps.${i}.title`}
+                          as="h3"
                           style={{
                             fontFamily:    'var(--font-display)',
                             fontWeight:    300,
@@ -181,48 +167,113 @@ export function ProcessSection() {
                           }}
                         >
                           {step.title}
-                        </h3>
+                        </EditableText>
                       </div>
 
                       {/* Expandable description */}
                       <div
                         style={{
                           overflow:   'hidden',
-                          maxHeight:  isActive ? '140px' : '0px',
+                          maxHeight:  (isActive || isEditMode) ? '260px' : '0px',
                           transition: 'max-height 0.55s cubic-bezier(0.16, 1, 0.3, 1)',
                         }}
                       >
-                        <p
+                        {/* Subtitle */}
+                        <EditableText
+                          path={`process.steps.${i}.subtitle`}
+                          as="p"
                           style={{
-                            fontFamily: 'var(--font-body)',
-                            fontSize:   '0.82rem',
-                            lineHeight: 1.9,
-                            color:      'rgba(248,244,238,0.42)',
-                            marginTop:  14,
+                            fontFamily:    'var(--font-body)',
+                            fontSize:      '0.5rem',
+                            letterSpacing: '0.3em',
+                            textTransform: 'uppercase',
+                            color:         '#C9A84C',
+                            marginTop:     14,
+                            paddingLeft:   40,
+                          }}
+                        >
+                          {step.subtitle}
+                        </EditableText>
+
+                        <EditableText
+                          path={`process.steps.${i}.description`}
+                          as="p"
+                          multiline
+                          style={{
+                            fontFamily:  'var(--font-body)',
+                            fontSize:    '0.82rem',
+                            lineHeight:  1.9,
+                            color:       'rgba(248,244,238,0.42)',
+                            marginTop:   10,
                             paddingLeft: 40,
-                            maxWidth:   480,
+                            maxWidth:    480,
                           }}
                         >
                           {step.description}
-                        </p>
+                        </EditableText>
+
+                        {/* Image editor inline — only in edit mode */}
+                        {isEditMode && (
+                          <div style={{ paddingLeft: 40, marginTop: 16 }}>
+                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.4)', marginBottom: 8 }}>
+                              Step Image
+                            </p>
+                            <div style={{ position: 'relative', width: 180, height: 110, overflow: 'hidden' }}>
+                              <EditableImage
+                                path={`process.steps.${i}.image`}
+                                src={step.image}
+                                alt={step.title}
+                                draggable={false}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Delete step button */}
+                        {isEditMode && (
+                          <button
+                            onClick={() => removeItem('process.steps', i)}
+                            style={{
+                              marginTop:     12,
+                              marginLeft:    40,
+                              display:       'inline-flex',
+                              alignItems:    'center',
+                              gap:           6,
+                              background:    'rgba(220,50,50,0.1)',
+                              border:        '1px solid rgba(220,50,50,0.3)',
+                              color:         'rgba(220,100,100,0.8)',
+                              fontFamily:    'var(--font-body)',
+                              fontSize:      '0.38rem',
+                              letterSpacing: '0.3em',
+                              textTransform: 'uppercase',
+                              padding:       '6px 12px',
+                              cursor:        'pointer',
+                            }}
+                          >
+                            × Remove Step
+                          </button>
+                        )}
                       </div>
                     </div>
 
                     {/* Arrow */}
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-body)',
-                        fontSize:   '1.25rem',
-                        color:      '#C9A84C',
-                        opacity:    isActive ? 1 : 0,
-                        transform:  isActive ? 'translateX(0)' : 'translateX(-12px)',
-                        transition: 'opacity 0.35s ease, transform 0.35s ease',
-                        paddingTop: 6,
-                        flexShrink: 0,
-                      }}
-                    >
-                      →
-                    </span>
+                    {!isEditMode && (
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-body)',
+                          fontSize:   '1.25rem',
+                          color:      '#C9A84C',
+                          opacity:    isActive ? 1 : 0,
+                          transform:  isActive ? 'translateX(0)' : 'translateX(-12px)',
+                          transition: 'opacity 0.35s ease, transform 0.35s ease',
+                          paddingTop: 6,
+                          flexShrink: 0,
+                        }}
+                      >
+                        →
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -231,118 +282,152 @@ export function ProcessSection() {
             {/* Final border */}
             <div style={{ height: 1, background: 'rgba(248,244,238,0.08)' }} />
 
-            {/* CTA */}
-            <div style={{ marginTop: 44 }}>
-              <a
-                href="#footer"
+            {/* Add Step (edit mode only) */}
+            {isEditMode && (
+              <button
+                onClick={() => addItem('process.steps', {
+                  number:      `0${steps.length + 1}`,
+                  title:       'New Step',
+                  subtitle:    'Step Subtitle',
+                  description: 'Describe this step of the design process.',
+                  image:       'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=85&auto=format&fit=crop',
+                })}
                 style={{
-                  display:        'inline-flex',
-                  alignItems:     'center',
-                  gap:            14,
-                  fontFamily:     'var(--font-body)',
-                  fontSize:       '0.52rem',
-                  letterSpacing:  '0.42em',
-                  textTransform:  'uppercase',
-                  color:          '#C9A84C',
-                  textDecoration: 'none',
-                  transition:     'gap 0.3s ease',
+                  marginTop:     20,
+                  display:       'inline-flex',
+                  alignItems:    'center',
+                  gap:           8,
+                  background:    'rgba(201,168,76,0.08)',
+                  border:        '1px dashed rgba(201,168,76,0.35)',
+                  color:         '#C9A84C',
+                  fontFamily:    'var(--font-body)',
+                  fontSize:      '0.4rem',
+                  letterSpacing: '0.4em',
+                  textTransform: 'uppercase',
+                  padding:       '10px 18px',
+                  cursor:        'pointer',
                 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.gap = '22px'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.gap = '14px'; }}
               >
-                Start Your Project
-                <span style={{ display: 'block', width: 44, height: 1, background: '#C9A84C' }} />
-              </a>
-            </div>
+                + Add Step
+              </button>
+            )}
+
+            {/* CTA */}
+            {!isEditMode && (
+              <div style={{ marginTop: 44 }}>
+                <a
+                  href="#footer"
+                  style={{
+                    display:        'inline-flex',
+                    alignItems:     'center',
+                    gap:            14,
+                    fontFamily:     'var(--font-body)',
+                    fontSize:       '0.52rem',
+                    letterSpacing:  '0.42em',
+                    textTransform:  'uppercase',
+                    color:          '#C9A84C',
+                    textDecoration: 'none',
+                    transition:     'gap 0.3s ease',
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.gap = '22px'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.gap = '14px'; }}
+                >
+                  Start Your Project
+                  <span style={{ display: 'block', width: 44, height: 1, background: '#C9A84C' }} />
+                </a>
+              </div>
+            )}
           </div>
 
-          {/* ── Right: sticky image panel ─────────────── */}
-          <div
-            style={{
-              position:   'sticky',
-              top:        100,
-              overflow:   'hidden',
-              aspectRatio:'4/3',
-              opacity:    revealed ? 1 : 0,
-              transition: 'opacity 0.9s ease 0.35s',
-            }}
-          >
-            {STEPS.map((step, i) => (
-              <img
-                key={step.number}
-                src={step.image}
-                alt={step.title}
-                draggable={false}
-                style={{
-                  position:       'absolute',
-                  inset:          0,
-                  width:          '100%',
-                  height:         '100%',
-                  objectFit:      'cover',
-                  objectPosition: 'center',
-                  opacity:        i === active ? 1 : 0,
-                  transition:     'opacity 0.75s ease',
-                  transform:      i === active ? 'scale(1.02)' : 'scale(1)',
-                }}
-              />
-            ))}
-
-            {/* Step label overlay at bottom */}
+          {/* ── Right: sticky image panel (view mode only) ─────────────── */}
+          {!isEditMode && (
             <div
               style={{
-                position:   'absolute',
-                bottom:     0,
-                left:       0,
-                right:      0,
-                padding:    '20px 24px',
-                background: 'linear-gradient(to top, rgba(11,11,9,0.95), transparent)',
-                display:    'flex',
-                alignItems: 'center',
-                gap:        14,
+                position:   'sticky',
+                top:        100,
+                overflow:   'hidden',
+                aspectRatio:'4/3',
+                opacity:    revealed ? 1 : 0,
+                transition: 'opacity 0.9s ease 0.35s',
               }}
             >
-              <span
+              {steps.map((step, i) => (
+                <img
+                  key={i}
+                  src={step.image}
+                  alt={step.title}
+                  draggable={false}
+                  style={{
+                    position:       'absolute',
+                    inset:          0,
+                    width:          '100%',
+                    height:         '100%',
+                    objectFit:      'cover',
+                    objectPosition: 'center',
+                    opacity:        i === active ? 1 : 0,
+                    transition:     'opacity 0.75s ease',
+                    transform:      i === active ? 'scale(1.02)' : 'scale(1)',
+                  }}
+                />
+              ))}
+
+              {/* Step label overlay */}
+              <div
                 style={{
-                  fontFamily:    'var(--font-display)',
-                  fontSize:      '2.2rem',
-                  fontWeight:    300,
-                  color:         '#C9A84C',
-                  lineHeight:    1,
-                  letterSpacing: '-0.02em',
+                  position:   'absolute',
+                  bottom:     0,
+                  left:       0,
+                  right:      0,
+                  padding:    '20px 24px',
+                  background: 'linear-gradient(to top, rgba(11,11,9,0.95), transparent)',
+                  display:    'flex',
+                  alignItems: 'center',
+                  gap:        14,
                 }}
               >
-                {STEPS[active].number}
-              </span>
-              <div style={{ width: 1, height: 22, background: 'rgba(201,168,76,0.35)' }} />
-              <div>
                 <span
                   style={{
-                    fontFamily:    'var(--font-body)',
-                    fontSize:      '0.48rem',
-                    letterSpacing: '0.4em',
-                    textTransform: 'uppercase',
-                    color:         '#F8F4EE',
-                    opacity:       0.7,
+                    fontFamily:    'var(--font-display)',
+                    fontSize:      '2.2rem',
+                    fontWeight:    300,
+                    color:         '#C9A84C',
+                    lineHeight:    1,
+                    letterSpacing: '-0.02em',
                   }}
                 >
-                  {STEPS[active].subtitle}
+                  {steps[active]?.number ?? '01'}
                 </span>
+                <div style={{ width: 1, height: 22, background: 'rgba(201,168,76,0.35)' }} />
+                <div>
+                  <span
+                    style={{
+                      fontFamily:    'var(--font-body)',
+                      fontSize:      '0.48rem',
+                      letterSpacing: '0.4em',
+                      textTransform: 'uppercase',
+                      color:         '#F8F4EE',
+                      opacity:       0.7,
+                    }}
+                  >
+                    {steps[active]?.subtitle ?? ''}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Gold corner accent */}
-            <div
-              style={{
-                position:    'absolute',
-                top:         20,
-                right:       20,
-                width:       40,
-                height:      40,
-                borderBottom: '1px solid rgba(201,168,76,0.4)',
-                borderLeft:  '1px solid rgba(201,168,76,0.4)',
-              }}
-            />
-          </div>
+              {/* Gold corner accent */}
+              <div
+                style={{
+                  position:     'absolute',
+                  top:          20,
+                  right:        20,
+                  width:        40,
+                  height:       40,
+                  borderBottom: '1px solid rgba(201,168,76,0.4)',
+                  borderLeft:   '1px solid rgba(201,168,76,0.4)',
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </section>

@@ -1,7 +1,9 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { useAdmin } from '@/src/contexts/AdminContext';
+import { EditableText } from '@/src/components/admin/EditableText';
 
-/* ─── Data ─────────────────────────────────────────────────── */
+/* ─── Static floor plan rooms (decorative only, not editable) ── */
 const ROOMS = [
   { id: 'living',   label: 'Living Room', sqm: 42, x: 40,  y: 30,  w: 240, h: 160 },
   { id: 'master',   label: 'Master Bed',  sqm: 28, x: 40,  y: 200, w: 160, h: 120 },
@@ -11,26 +13,15 @@ const ROOMS = [
   { id: 'corridor', label: 'Corridor',    sqm: 12, x: 200, y: 200, w: 10,  h: 120 },
 ];
 
-const MATERIALS = [
-  { label: 'Engineered Oak Flooring',     pct: 85, color: '#C9A84C' },
-  { label: 'Italian Marble (Bathrooms)',  pct: 60, color: '#9B8B6E' },
-  { label: 'Custom Joinery (Walnut)',     pct: 72, color: '#8A7860' },
-  { label: 'Venetian Plaster Walls',      pct: 45, color: '#A09278' },
-];
-
-const PROJECT_STATS = [
-  { value: '210', unit: 'sqm',  label: 'Total Area'   },
-  { value: '4',   unit: 'beds', label: 'Bedrooms'     },
-  { value: '3',   unit: 'mo',   label: 'Timeline'     },
-  { value: '12',  unit: 'wks',  label: 'Design Phase' },
-];
-
-/* ─── Component ─────────────────────────────────────────────── */
 export function BIMSection() {
-  const sectionRef              = useRef<HTMLElement>(null);
-  const [revealed, setRevealed] = useState(false);
+  const sectionRef                = useRef<HTMLElement>(null);
+  const [revealed,   setRevealed] = useState(false);
   const [activeRoom, setActiveRoom] = useState<string | null>(null);
-  const [barsPct, setBarsPct]   = useState(false);
+  const [barsPct,    setBarsPct]  = useState(false);
+
+  const { isEditMode, content, updateField, removeItem, addItem } = useAdmin();
+  const stats     = content.bim.stats;
+  const materials = content.bim.materials;
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -57,10 +48,10 @@ export function BIMSection() {
       {/* Subtle radial glow */}
       <div
         style={{
-          position:       'absolute',
-          inset:          0,
-          pointerEvents:  'none',
-          background:     'radial-gradient(ellipse 65% 55% at 80% 50%, rgba(201,168,76,0.035) 0%, transparent 70%)',
+          position:      'absolute',
+          inset:         0,
+          pointerEvents: 'none',
+          background:    'radial-gradient(ellipse 65% 55% at 80% 50%, rgba(201,168,76,0.035) 0%, transparent 70%)',
         }}
       />
 
@@ -77,9 +68,13 @@ export function BIMSection() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
           <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg, transparent, #C9A84C)' }} />
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.48rem', letterSpacing: '0.55em', textTransform: 'uppercase', color: '#C9A84C' }}>
-            BIM Breakdown
-          </span>
+          <EditableText
+            path="bim.eyebrow"
+            as="span"
+            style={{ fontFamily: 'var(--font-body)', fontSize: '0.48rem', letterSpacing: '0.55em', textTransform: 'uppercase', color: '#C9A84C' }}
+          >
+            {content.bim.eyebrow}
+          </EditableText>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
           <h2
@@ -92,13 +87,24 @@ export function BIMSection() {
               lineHeight:    0.93,
             }}
           >
-            Project{' '}
-            <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>Intelligence</em>
+            <EditableText path="bim.heading" as="span">
+              {content.bim.heading}
+            </EditableText>
+            {' '}
+            <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>
+              <EditableText path="bim.headingGold" as="span">
+                {content.bim.headingGold}
+              </EditableText>
+            </em>
           </h2>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.88rem', color: 'rgba(248,244,238,0.32)', lineHeight: 1.85, maxWidth: 380, textAlign: 'right' }}>
-            Every Geosite project is modelled in full BIM — giving you a precise
-            digital twin before the first material is ordered.
-          </p>
+          <EditableText
+            path="bim.description"
+            as="p"
+            multiline
+            style={{ fontFamily: 'var(--font-body)', fontSize: '0.88rem', color: 'rgba(248,244,238,0.32)', lineHeight: 1.85, maxWidth: 380, textAlign: 'right' }}
+          >
+            {content.bim.description}
+          </EditableText>
         </div>
       </div>
 
@@ -116,21 +122,23 @@ export function BIMSection() {
         <div
           style={{
             display:             'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
+            gridTemplateColumns: `repeat(${stats.length}, 1fr)`,
             borderTop:           '1px solid rgba(248,244,238,0.07)',
             borderBottom:        '1px solid rgba(248,244,238,0.07)',
           }}
         >
-          {PROJECT_STATS.map((stat, i) => (
+          {stats.map((stat, i) => (
             <div
-              key={stat.label}
+              key={i}
               style={{
                 padding:     'clamp(28px, 3.5vw, 44px) clamp(20px, 2.5vw, 40px)',
-                borderRight: i < 3 ? '1px solid rgba(248,244,238,0.07)' : 'none',
+                borderRight: i < stats.length - 1 ? '1px solid rgba(248,244,238,0.07)' : 'none',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, marginBottom: 10 }}>
-                <span
+                <EditableText
+                  path={`bim.stats.${i}.value`}
+                  as="span"
                   style={{
                     fontFamily:    'var(--font-display)',
                     fontWeight:    300,
@@ -141,8 +149,10 @@ export function BIMSection() {
                   }}
                 >
                   {stat.value}
-                </span>
-                <span
+                </EditableText>
+                <EditableText
+                  path={`bim.stats.${i}.unit`}
+                  as="span"
                   style={{
                     fontFamily:    'var(--font-body)',
                     fontSize:      '0.48rem',
@@ -152,9 +162,11 @@ export function BIMSection() {
                   }}
                 >
                   {stat.unit}
-                </span>
+                </EditableText>
               </div>
-              <p
+              <EditableText
+                path={`bim.stats.${i}.label`}
+                as="p"
                 style={{
                   fontFamily:    'var(--font-body)',
                   fontSize:      '0.44rem',
@@ -164,10 +176,50 @@ export function BIMSection() {
                 }}
               >
                 {stat.label}
-              </p>
+              </EditableText>
+              {isEditMode && (
+                <button
+                  onClick={() => removeItem('bim.stats', i)}
+                  style={{
+                    marginTop:     8,
+                    background:    'rgba(220,50,50,0.08)',
+                    border:        '1px solid rgba(220,50,50,0.25)',
+                    color:         'rgba(220,100,100,0.7)',
+                    fontFamily:    'var(--font-body)',
+                    fontSize:      '0.35rem',
+                    letterSpacing: '0.25em',
+                    padding:       '3px 8px',
+                    cursor:        'pointer',
+                  }}
+                >
+                  × Remove
+                </button>
+              )}
             </div>
           ))}
         </div>
+        {isEditMode && (
+          <button
+            onClick={() => addItem('bim.stats', { value: '0', unit: 'unit', label: 'New Stat' })}
+            style={{
+              marginTop:     12,
+              display:       'inline-flex',
+              alignItems:    'center',
+              gap:           8,
+              background:    'rgba(201,168,76,0.08)',
+              border:        '1px dashed rgba(201,168,76,0.35)',
+              color:         '#C9A84C',
+              fontFamily:    'var(--font-body)',
+              fontSize:      '0.38rem',
+              letterSpacing: '0.35em',
+              textTransform: 'uppercase',
+              padding:       '8px 14px',
+              cursor:        'pointer',
+            }}
+          >
+            + Add Stat
+          </button>
+        )}
       </div>
 
       {/* ── Two-column: Floor Plan + Materials ──────────────────── */}
@@ -182,7 +234,6 @@ export function BIMSection() {
           alignItems: 'start',
         }}
       >
-
         {/* Left: SVG floor plan */}
         <div
           style={{
@@ -191,7 +242,6 @@ export function BIMSection() {
             transition: 'opacity 0.9s ease 0.2s, transform 0.9s ease 0.2s',
           }}
         >
-          {/* Plan header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: '#C9A84C' }}>
               Floor Plan — Level 1
@@ -209,13 +259,10 @@ export function BIMSection() {
               padding:      'clamp(24px, 3vw, 36px)',
             }}
           >
-            {/* SVG */}
             <svg viewBox="0 0 480 360" style={{ display: 'block', width: '100%' }}>
-              {/* Outer walls */}
               <rect x="30" y="20" width="420" height="320" rx="2"
                 fill="none" stroke="rgba(201,168,76,0.25)" strokeWidth="8" />
 
-              {/* Rooms */}
               {ROOMS.filter(r => r.id !== 'corridor').map(room => {
                 const isActive = activeRoom === room.id;
                 return (
@@ -256,7 +303,6 @@ export function BIMSection() {
                 );
               })}
 
-              {/* North arrow */}
               <g transform="translate(440, 40)">
                 <circle cx="0" cy="0" r="14" fill="none" stroke="rgba(201,168,76,0.25)" strokeWidth="1" />
                 <path d="M0 -10 L-4 4 L0 1 L4 4 Z" fill="rgba(201,168,76,0.55)" />
@@ -264,7 +310,6 @@ export function BIMSection() {
               </g>
             </svg>
 
-            {/* Room tooltip */}
             <div
               style={{
                 marginTop:  16,
@@ -323,17 +368,15 @@ export function BIMSection() {
             Material Specification
           </h4>
 
-          {/* Material bars */}
-          {MATERIALS.map((m, i) => (
+          {materials.map((m, i) => (
             <div
-              key={m.label}
+              key={i}
               style={{
-                marginBottom: 36,
+                marginBottom:  36,
                 paddingBottom: 36,
-                borderBottom: i < MATERIALS.length - 1 ? '1px solid rgba(248,244,238,0.06)' : 'none',
+                borderBottom:  i < materials.length - 1 ? '1px solid rgba(248,244,238,0.06)' : 'none',
               }}
             >
-              {/* Label + big percentage */}
               <div
                 style={{
                   display:        'flex',
@@ -343,7 +386,9 @@ export function BIMSection() {
                   gap:            12,
                 }}
               >
-                <span
+                <EditableText
+                  path={`bim.materials.${i}.label`}
+                  as="span"
                   style={{
                     fontFamily: 'var(--font-body)',
                     fontSize:   '0.85rem',
@@ -352,7 +397,7 @@ export function BIMSection() {
                   }}
                 >
                   {m.label}
-                </span>
+                </EditableText>
                 <span
                   style={{
                     fontFamily:    'var(--font-display)',
@@ -362,34 +407,78 @@ export function BIMSection() {
                     lineHeight:    1,
                     letterSpacing: '-0.03em',
                     flexShrink:    0,
+                    display:       'flex',
+                    alignItems:    'baseline',
+                    gap:           2,
                   }}
                 >
-                  {m.pct}
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.7rem', marginLeft: 2, opacity: 0.7 }}>%</span>
+                  <EditableText
+                    path={`bim.materials.${i}.pct`}
+                    as="span"
+                    style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(2rem, 3vw, 2.8rem)', color: m.color, lineHeight: 1, letterSpacing: '-0.03em' }}
+                    editStyle={{ minWidth: '2ch' }}
+                  >
+                    {String(m.pct)}
+                  </EditableText>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.7rem', opacity: 0.7 }}>%</span>
                 </span>
               </div>
 
-              {/* Bar track */}
-              <div
-                style={{
-                  height:       8,
-                  borderRadius: 4,
-                  background:   'rgba(248,244,238,0.05)',
-                  overflow:     'hidden',
-                }}
-              >
+              <div style={{ height: 8, borderRadius: 4, background: 'rgba(248,244,238,0.05)', overflow: 'hidden' }}>
                 <div
                   style={{
-                    height:      '100%',
-                    width:       barsPct ? `${m.pct}%` : '0%',
-                    background:  `linear-gradient(90deg, ${m.color}55, ${m.color})`,
+                    height:       '100%',
+                    width:        barsPct ? `${m.pct}%` : '0%',
+                    background:   `linear-gradient(90deg, ${m.color}55, ${m.color})`,
                     borderRadius: 4,
-                    transition:  `width 1.3s cubic-bezier(0.4,0,0.2,1) ${i * 180}ms`,
+                    transition:   `width 1.3s cubic-bezier(0.4,0,0.2,1) ${i * 180}ms`,
                   }}
                 />
               </div>
+
+              {isEditMode && (
+                <button
+                  onClick={() => removeItem('bim.materials', i)}
+                  style={{
+                    marginTop:     8,
+                    background:    'rgba(220,50,50,0.08)',
+                    border:        '1px solid rgba(220,50,50,0.25)',
+                    color:         'rgba(220,100,100,0.7)',
+                    fontFamily:    'var(--font-body)',
+                    fontSize:      '0.35rem',
+                    letterSpacing: '0.25em',
+                    padding:       '3px 8px',
+                    cursor:        'pointer',
+                  }}
+                >
+                  × Remove
+                </button>
+              )}
             </div>
           ))}
+
+          {isEditMode && (
+            <button
+              onClick={() => addItem('bim.materials', { label: 'New Material', pct: 50, color: '#C9A84C' })}
+              style={{
+                marginBottom:  24,
+                display:       'inline-flex',
+                alignItems:    'center',
+                gap:           8,
+                background:    'rgba(201,168,76,0.08)',
+                border:        '1px dashed rgba(201,168,76,0.35)',
+                color:         '#C9A84C',
+                fontFamily:    'var(--font-body)',
+                fontSize:      '0.38rem',
+                letterSpacing: '0.35em',
+                textTransform: 'uppercase',
+                padding:       '8px 14px',
+                cursor:        'pointer',
+              }}
+            >
+              + Add Material
+            </button>
+          )}
 
           {/* CTA */}
           <a
@@ -412,15 +501,15 @@ export function BIMSection() {
             }}
             onMouseEnter={e => {
               const el = e.currentTarget as HTMLElement;
-              el.style.background    = '#C9A84C';
-              el.style.color         = '#0A0908';
-              el.style.borderColor   = '#C9A84C';
+              el.style.background  = '#C9A84C';
+              el.style.color       = '#0A0908';
+              el.style.borderColor = '#C9A84C';
             }}
             onMouseLeave={e => {
               const el = e.currentTarget as HTMLElement;
-              el.style.background    = 'transparent';
-              el.style.color         = '#C9A84C';
-              el.style.borderColor   = 'rgba(201,168,76,0.4)';
+              el.style.background  = 'transparent';
+              el.style.color       = '#C9A84C';
+              el.style.borderColor = 'rgba(201,168,76,0.4)';
             }}
           >
             Request a BIM Preview

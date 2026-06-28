@@ -68,11 +68,123 @@ export interface PortfolioContent {
   categories:     PortfolioItem[];
 }
 
+/* ─── Process ─────────────────────────────────────────────── */
+
+export interface ProcessStep {
+  number:      string;
+  title:       string;
+  subtitle:    string;
+  description: string;
+  image:       string;
+}
+
+export interface ProcessContent {
+  eyebrow:     string;
+  heading:     string;
+  headingGold: string;
+  steps:       ProcessStep[];
+}
+
+/* ─── Testimonials ────────────────────────────────────────── */
+
+export interface TestimonialItem {
+  quote:    string;
+  name:     string;
+  role:     string;
+  project:  string;
+  initials: string;
+}
+
+export interface TestimonialsContent {
+  eyebrow:     string;
+  heading:     string;
+  headingGold: string;
+  bgImage:     string;
+  items:       TestimonialItem[];
+}
+
+/* ─── BIM ─────────────────────────────────────────────────── */
+
+export interface BIMStat {
+  value: string;
+  unit:  string;
+  label: string;
+}
+
+export interface BIMMaterial {
+  label: string;
+  pct:   number;
+  color: string;
+}
+
+export interface BIMContent {
+  eyebrow:     string;
+  heading:     string;
+  headingGold: string;
+  description: string;
+  stats:       BIMStat[];
+  materials:   BIMMaterial[];
+}
+
+/* ─── Footer ──────────────────────────────────────────────── */
+
+export interface FooterContent {
+  tagline:         string;
+  ctaEyebrow:      string;
+  ctaHeading:      string;
+  ctaBody:         string;
+  ctaImage:        string;
+  contactEmail:    string;
+  contactPhone:    string;
+  contactHours:    string;
+  newsletterLabel: string;
+  copyright:       string;
+}
+
+/* ─── Nav ─────────────────────────────────────────────────── */
+
+export interface NavLink {
+  label: string;
+  href:  string;
+}
+
+export interface NavContent {
+  links:        NavLink[];
+  enquireLabel: string;
+}
+
+/* ─── Before / After ──────────────────────────────────────── */
+
+export interface BeforeAfterSpace {
+  id:       string;
+  label:    string;
+  location: string;
+  before:   string;
+  after:    string;
+  quote:    string;
+  client:   string;
+}
+
+export interface BeforeAfterContent {
+  eyebrow:     string;
+  heading:     string;
+  headingGold: string;
+  spaces:      BeforeAfterSpace[];
+}
+
+/* ─── Root ────────────────────────────────────────────────── */
+
 export interface SiteContent {
-  landing:   LandingContent;
-  services:  ServicesContent;
-  suite:     SuiteContent;
-  portfolio: PortfolioContent;
+  landing:      LandingContent;
+  services:     ServicesContent;
+  suite:        SuiteContent;
+  portfolio:    PortfolioContent;
+  process:      ProcessContent;
+  testimonials: TestimonialsContent;
+  bim:          BIMContent;
+  footer:       FooterContent;
+  nav:          NavContent;
+  beforeAfter:  BeforeAfterContent;
 }
 
 /* ─── Defaults (mirrors the hardcoded data in each section) ── */
@@ -218,6 +330,182 @@ export const DEFAULT_CONTENT: SiteContent = {
         description: 'New Zealand wool rug with a subtle geometric pattern. Defines the conversation zone and anchors the entire space.',
         material: 'NZ Wool · Cotton Backing · Natural Dyes',
         image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1400&q=90&auto=format&fit=crop',
+      },
+    ],
+  },
+
+  /* ── Process ── */
+  process: {
+    eyebrow:     'How We Work',
+    heading:     'Our Design',
+    headingGold: 'Process',
+    steps: [
+      {
+        number:      '01',
+        title:       'Discovery',
+        subtitle:    'Understanding Your Vision',
+        description: 'We begin with an in-depth consultation to understand your lifestyle, aesthetic preferences, and spatial goals. Every detail matters — from morning rituals to entertaining habits.',
+        image:       'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=85&auto=format&fit=crop',
+      },
+      {
+        number:      '02',
+        title:       'Concept',
+        subtitle:    'Design Proposals',
+        description: 'Our designers craft multiple bespoke concepts tailored specifically to your space. You receive mood boards, material palettes, and layout options — each a distinct design narrative.',
+        image:       'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1200&q=85&auto=format&fit=crop',
+      },
+      {
+        number:      '03',
+        title:       'Visualise',
+        subtitle:    '3D & BIM Rendering',
+        description: 'Walk through photorealistic 3D renders and BIM models of your space before a single nail is hammered. Experience your new home virtually — lighting, materials, and all.',
+        image:       'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85&auto=format&fit=crop',
+      },
+      {
+        number:      '04',
+        title:       'Deliver',
+        subtitle:    'Flawless Execution',
+        description: 'Our trusted network of craftsmen and project managers bring the vision to life with surgical precision. We handle procurement, installation, and final styling — you simply arrive.',
+        image:       'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200&q=85&auto=format&fit=crop',
+      },
+    ],
+  },
+
+  /* ── Testimonials ── */
+  testimonials: {
+    eyebrow:     'Client Stories',
+    heading:     'Happy Clients.',
+    headingGold: 'Beautiful Spaces.',
+    bgImage:     'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1920&q=85&auto=format&fit=crop',
+    items: [
+      {
+        quote:    'Geosite DEVELOPERS transformed our family home into something out of a magazine. Every detail was considered. The BIM walkthrough before construction started gave us total confidence.',
+        name:     'Amara Okonkwo',
+        role:     'CEO, Horizon Capital',
+        project:  'Runda Villa — Full Interior',
+        initials: 'AO',
+      },
+      {
+        quote:    'Working with the Geosite team was effortless. They understood our brief immediately and delivered a 3D render so detailed we felt like we were already living there.',
+        name:     'James & Wanjiru Njoroge',
+        role:     'Entrepreneurs',
+        project:  'Karen Residence — Living & Master',
+        initials: 'JW',
+      },
+      {
+        quote:    "The before/after is genuinely shocking. Our kitchen went from dated to something I'm proud to show off. Delivered on time, on budget, and beyond expectation.",
+        name:     'Chef Michael Kariuki',
+        role:     'Executive Chef',
+        project:  'Westlands Penthouse — Kitchen',
+        initials: 'MK',
+      },
+      {
+        quote:    'The attention to Kenyan heritage materials mixed with contemporary design is what sets Geosite apart. Our office now tells our brand story before anyone says a word.',
+        name:     'Fatuma Hassan',
+        role:     'Co-founder, Nairobi Design Week',
+        project:  'CBD Office — Commercial Interior',
+        initials: 'FH',
+      },
+    ],
+  },
+
+  /* ── BIM ── */
+  bim: {
+    eyebrow:     'BIM Breakdown',
+    heading:     'Project',
+    headingGold: 'Intelligence',
+    description: 'Every Geosite project is modelled in full BIM — giving you a precise digital twin before the first material is ordered.',
+    stats: [
+      { value: '210', unit: 'sqm',  label: 'Total Area'   },
+      { value: '4',   unit: 'beds', label: 'Bedrooms'     },
+      { value: '3',   unit: 'mo',   label: 'Timeline'     },
+      { value: '12',  unit: 'wks',  label: 'Design Phase' },
+    ],
+    materials: [
+      { label: 'Engineered Oak Flooring',    pct: 85, color: '#C9A84C' },
+      { label: 'Italian Marble (Bathrooms)', pct: 60, color: '#9B8B6E' },
+      { label: 'Custom Joinery (Walnut)',    pct: 72, color: '#8A7860' },
+      { label: 'Venetian Plaster Walls',     pct: 45, color: '#A09278' },
+    ],
+  },
+
+  /* ── Footer ── */
+  footer: {
+    tagline:         'Crafting exceptional interiors through bespoke design, BIM technology, and timeless elegance for modern African living.',
+    ctaEyebrow:      'Begin Your Transformation',
+    ctaHeading:      'Imagine what your space could become.',
+    ctaBody:         'We take on a limited number of signature projects each year. Reach out early to secure your slot.',
+    ctaImage:        '/renders/Blue Spiral Hotel Ground full render.png',
+    contactEmail:    'studio@geositedevelopers.co.ke',
+    contactPhone:    '+254 700 000 000',
+    contactHours:    'Mon – Fri, 8am – 6pm EAT',
+    newsletterLabel: 'Design Insights Newsletter',
+    copyright:       '© 2026 Geosite DEVELOPERS. All Rights Reserved. Designed in Nairobi, Kenya.',
+  },
+
+  /* ── Nav ── */
+  nav: {
+    links: [
+      { label: 'Studio',    href: '#landing'     },
+      { label: 'Process',   href: '#process'     },
+      { label: 'Services',  href: '#services'    },
+      { label: 'Projects',  href: '#before-after'},
+      { label: 'Portfolio', href: '#portfolio'   },
+      { label: 'Contact',   href: '#footer'      },
+    ],
+    enquireLabel: 'Enquire',
+  },
+
+  /* ── Before / After ── */
+  beforeAfter: {
+    eyebrow:     'Project Transformations',
+    heading:     'Model to',
+    headingGold: 'Reality',
+    spaces: [
+      {
+        id:       'nova-reception',
+        label:    'NOVA Atelier Reception',
+        location: 'Commercial Interior · Nairobi',
+        before:   '/renders/NOVA Atelica Reception rhino.png',
+        after:    '/renders/NOVA Atelica Reception render 1.png',
+        quote:    'The sinusoidal light wall was our boldest brief — Geosite delivered it flawlessly.',
+        client:   'NOVA Atelier',
+      },
+      {
+        id:       'blue-spiral-tower',
+        label:    'Blue Spiral Tower',
+        location: 'Mixed-Use Development · Karen',
+        before:   '/renders/Blue Spiral Hotel Ground.jpg',
+        after:    '/renders/Blue Spiral Hotel Ground full render.png',
+        quote:    'From structural model to finished landmark — the process was seamless.',
+        client:   'Arch. Kariuki',
+      },
+      {
+        id:       'ade-living',
+        label:    'Ade Residence — Living Room',
+        location: 'Residential Interior · Runda',
+        before:   '/renders/Screenshot 2024-11-26 144316.png',
+        after:    '/renders/Ade Int_13 - Photo.jpg',
+        quote:    'They transformed our vision into a living, breathing space.',
+        client:   'Amara O.',
+      },
+      {
+        id:       'hotel-corridor',
+        label:    'Hotel Ground Floor',
+        location: 'Hospitality · Westlands',
+        before:   '/renders/Screenshot 2026-04-07 163957.png',
+        after:    '/renders/Blue Spiral Hotel Entrance Final.png',
+        quote:    'The BIM walkthrough gave us total confidence before a nail was hammered.',
+        client:   'James & Wanjiru N.',
+      },
+      {
+        id:       'presidential-suite',
+        label:    'Presidential Suite',
+        location: 'Luxury Suite · Westlands',
+        before:   '/renders/Screenshot 2026-04-15 162323.png',
+        after:    '/renders/Luxurious presidential suite Infinity feel 1.png',
+        quote:    'Geosite turned our concept sketch into a living masterpiece.',
+        client:   'Amara K.',
       },
     ],
   },

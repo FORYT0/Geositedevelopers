@@ -1,9 +1,12 @@
 'use client';
 import { useState } from 'react';
 import { useAdmin } from '@/src/contexts/AdminContext';
+import { EditableText } from '@/src/components/admin/EditableText';
+import { EditableImage } from '@/src/components/admin/EditableImage';
 
-/* ─── Data ─────────────────────────────────────────────────── */
-const FOOTER_LINKS: Record<string, string[]> = {
+/* ─── Static link groups (labels editable via EditableText) ── */
+const FOOTER_LINK_GROUPS = ['Studio', 'Explore', 'Services'] as const;
+const FOOTER_LINK_DEFAULTS: Record<string, string[]> = {
   Studio:   ['About Us', 'Our Team', 'Design Careers', 'Press & Awards'],
   Explore:  ['Portfolio', 'BIM Projects', 'Style Guide', 'Design Blog'],
   Services: ['Interior Design', '3D Visualisation', 'BIM Modelling', 'Project Management'],
@@ -15,49 +18,6 @@ const TRUSTED_BY = [
   'Design Indaba',
   'African Architecture Matters',
 ];
-
-const CONTACT_ITEMS = [
-  {
-    svg: (
-      <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round">
-        <path d="M8 1.5 A4 4 0 1 1 8 9.5"/><path d="M8 9.5 L8 14.5"/>
-        <line x1="6" y1="14.5" x2="10" y2="14.5"/>
-        <circle cx="8" cy="5.5" r="1.3" fill="rgba(201,168,76,0.5)" stroke="none"/>
-      </svg>
-    ),
-    label: 'Location',
-    value: 'Nairobi, Kenya',
-  },
-  {
-    svg: (
-      <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="1.5" y="3.5" width="13" height="9" rx="1.5"/>
-        <path d="M1.5 5 L8 9 L14.5 5"/>
-      </svg>
-    ),
-    label: 'Email',
-    value: 'studio@geositedevelopers.co.ke',
-  },
-  {
-    svg: (
-      <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2.5 2 H5.5 L7 5 L5.5 6.5 C6.5 8.5 7.5 9.5 9.5 10.5 L11 9 L14 10.5 V13.5 Q11.5 15.5 8.5 13 Q4.5 10.5 2.5 6.5 Q1.5 4 2.5 2 Z"/>
-      </svg>
-    ),
-    label: 'Phone',
-    value: '+254 700 000 000',
-  },
-  {
-    svg: (
-      <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round">
-        <circle cx="8" cy="8" r="6"/>
-        <path d="M8 4.5 V8 L10.5 10"/>
-      </svg>
-    ),
-    label: 'Hours',
-    value: 'Mon – Fri, 8am – 6pm EAT',
-  },
-] as { svg: React.ReactElement; label: string; value: string }[];
 
 /* ─── Footer Link ───────────────────────────────────────────── */
 function FooterLink({ label }: { label: string }) {
@@ -99,7 +59,9 @@ function FooterLink({ label }: { label: string }) {
 export function FooterSection() {
   const [email,     setEmail]     = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const { isAdmin, openLogin, toggleEditMode, isEditMode } = useAdmin();
+  const { isAdmin, openLogin, toggleEditMode, isEditMode, content } = useAdmin();
+
+  const fc = content.footer;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,17 +76,21 @@ export function FooterSection() {
 
       {/* ── CTA Banner ──────────────────────────────────────────── */}
       <div style={{ position: 'relative', overflow: 'hidden', minHeight: '62vh' }}>
-        <img
-          src="/renders/Blue Spiral Hotel Ground full render.png"
-          alt="Geosite DEVELOPERS project"
-          draggable={false}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
-        />
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <EditableImage
+            path="footer.ctaImage"
+            src={fc.ctaImage}
+            alt="Geosite DEVELOPERS project"
+            draggable={false}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+          />
+        </div>
         <div
           style={{
             position:   'absolute',
             inset:      0,
             background: 'linear-gradient(90deg, rgba(6,6,6,0.97) 0%, rgba(6,6,6,0.86) 52%, rgba(6,6,6,0.4) 100%)',
+            pointerEvents: 'none',
           }}
         />
 
@@ -147,9 +113,13 @@ export function FooterSection() {
           <div style={{ maxWidth: 560 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
               <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg, transparent, #C9A84C)' }} />
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.48rem', letterSpacing: '0.55em', textTransform: 'uppercase', color: '#C9A84C' }}>
-                Begin Your Transformation
-              </span>
+              <EditableText
+                path="footer.ctaEyebrow"
+                as="span"
+                style={{ fontFamily: 'var(--font-body)', fontSize: '0.48rem', letterSpacing: '0.55em', textTransform: 'uppercase', color: '#C9A84C' }}
+              >
+                {fc.ctaEyebrow}
+              </EditableText>
             </div>
             <h2
               style={{
@@ -162,13 +132,19 @@ export function FooterSection() {
                 marginBottom:  28,
               }}
             >
-              Imagine what
-              <br />
-              <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>your space</em>
-              <br />
-              could become.
+              <EditableText
+                path="footer.ctaHeading"
+                as="span"
+                multiline
+                style={{ display: 'block', fontFamily: 'var(--font-display)', fontWeight: 300, color: '#F8F4EE' }}
+              >
+                {fc.ctaHeading}
+              </EditableText>
             </h2>
-            <p
+            <EditableText
+              path="footer.ctaBody"
+              as="p"
+              multiline
               style={{
                 fontFamily:   'var(--font-body)',
                 fontSize:     '0.95rem',
@@ -178,12 +154,11 @@ export function FooterSection() {
                 maxWidth:     400,
               }}
             >
-              We take on a limited number of signature projects each year.
-              Reach out early to secure your slot.
-            </p>
+              {fc.ctaBody}
+            </EditableText>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <a
-                href="mailto:studio@geositedevelopers.co.ke"
+                href={`mailto:${fc.contactEmail}`}
                 style={{
                   display:       'inline-flex',
                   alignItems:    'center',
@@ -208,7 +183,7 @@ export function FooterSection() {
                 </svg>
               </a>
               <a
-                href="tel:+254700000000"
+                href={`tel:${fc.contactPhone.replace(/\s/g,'')}`}
                 style={{
                   display:       'inline-flex',
                   alignItems:    'center',
@@ -265,36 +240,80 @@ export function FooterSection() {
             >
               Contact Us
             </h4>
-            {CONTACT_ITEMS.map(item => (
-              <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <span style={{ marginTop: 3, flexShrink: 0 }}>{item.svg}</span>
-                <div>
-                  <span
-                    style={{
-                      display:       'block',
-                      fontFamily:    'var(--font-body)',
-                      fontSize:      '0.38rem',
-                      letterSpacing: '0.4em',
-                      textTransform: 'uppercase',
-                      color:         'rgba(201,168,76,0.42)',
-                      marginBottom:  4,
-                    }}
-                  >
-                    {item.label}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-body)',
-                      fontSize:   '0.8rem',
-                      fontWeight: 300,
-                      color:      'rgba(248,244,238,0.52)',
-                    }}
-                  >
-                    {item.value}
-                  </span>
-                </div>
+
+            {/* Location */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <span style={{ marginTop: 3, flexShrink: 0 }}>
+                <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round">
+                  <path d="M8 1.5 A4 4 0 1 1 8 9.5"/><path d="M8 9.5 L8 14.5"/>
+                  <line x1="6" y1="14.5" x2="10" y2="14.5"/>
+                  <circle cx="8" cy="5.5" r="1.3" fill="rgba(201,168,76,0.5)" stroke="none"/>
+                </svg>
+              </span>
+              <div>
+                <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.42)', marginBottom: 4 }}>Location</span>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 300, color: 'rgba(248,244,238,0.52)' }}>Nairobi, Kenya</span>
               </div>
-            ))}
+            </div>
+
+            {/* Email */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <span style={{ marginTop: 3, flexShrink: 0 }}>
+                <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1.5" y="3.5" width="13" height="9" rx="1.5"/>
+                  <path d="M1.5 5 L8 9 L14.5 5"/>
+                </svg>
+              </span>
+              <div>
+                <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.42)', marginBottom: 4 }}>Email</span>
+                <EditableText
+                  path="footer.contactEmail"
+                  as="span"
+                  style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 300, color: 'rgba(248,244,238,0.52)' }}
+                >
+                  {fc.contactEmail}
+                </EditableText>
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <span style={{ marginTop: 3, flexShrink: 0 }}>
+                <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2.5 2 H5.5 L7 5 L5.5 6.5 C6.5 8.5 7.5 9.5 9.5 10.5 L11 9 L14 10.5 V13.5 Q11.5 15.5 8.5 13 Q4.5 10.5 2.5 6.5 Q1.5 4 2.5 2 Z"/>
+                </svg>
+              </span>
+              <div>
+                <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.42)', marginBottom: 4 }}>Phone</span>
+                <EditableText
+                  path="footer.contactPhone"
+                  as="span"
+                  style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 300, color: 'rgba(248,244,238,0.52)' }}
+                >
+                  {fc.contactPhone}
+                </EditableText>
+              </div>
+            </div>
+
+            {/* Hours */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <span style={{ marginTop: 3, flexShrink: 0 }}>
+                <svg viewBox="0 0 16 16" fill="none" width="13" height="13" stroke="rgba(201,168,76,0.7)" strokeWidth="1.35" strokeLinecap="round">
+                  <circle cx="8" cy="8" r="6"/>
+                  <path d="M8 4.5 V8 L10.5 10"/>
+                </svg>
+              </span>
+              <div>
+                <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.42)', marginBottom: 4 }}>Hours</span>
+                <EditableText
+                  path="footer.contactHours"
+                  as="span"
+                  style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 300, color: 'rgba(248,244,238,0.52)' }}
+                >
+                  {fc.contactHours}
+                </EditableText>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -387,7 +406,10 @@ export function FooterSection() {
               </span>
             </div>
 
-            <p
+            <EditableText
+              path="footer.tagline"
+              as="p"
+              multiline
               style={{
                 fontFamily: 'var(--font-display)',
                 fontStyle:  'italic',
@@ -398,15 +420,16 @@ export function FooterSection() {
                 maxWidth:   280,
               }}
             >
-              Crafting exceptional interiors through bespoke design, BIM technology,
-              and timeless elegance for modern African living.
-            </p>
+              {fc.tagline}
+            </EditableText>
 
             <div style={{ width: 48, height: 1, background: 'linear-gradient(90deg, #C9A84C, transparent)' }} />
 
             {/* Newsletter */}
             <div>
-              <span
+              <EditableText
+                path="footer.newsletterLabel"
+                as="span"
                 style={{
                   display:       'block',
                   fontFamily:    'var(--font-body)',
@@ -417,11 +440,11 @@ export function FooterSection() {
                   marginBottom:  14,
                 }}
               >
-                Design Insights Newsletter
-              </span>
+                {fc.newsletterLabel}
+              </EditableText>
               {submitted ? (
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: '#C9A84C' }}>
-                  ✓ Thank you — we'll be in touch.
+                  ✓ Thank you — we&apos;ll be in touch.
                 </p>
               ) : (
                 <form onSubmit={handleSubmit} style={{ display: 'flex' }}>
@@ -470,7 +493,7 @@ export function FooterSection() {
           </div>
 
           {/* Link columns */}
-          {Object.entries(FOOTER_LINKS).map(([group, links]) => (
+          {FOOTER_LINK_GROUPS.map(group => (
             <div key={group} style={{ display: 'flex', flexDirection: 'column' }}>
               <h4
                 style={{
@@ -487,7 +510,7 @@ export function FooterSection() {
                 {group}
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {links.map(link => (
+                {FOOTER_LINK_DEFAULTS[group].map(link => (
                   <FooterLink key={link} label={link} />
                 ))}
 
@@ -565,13 +588,7 @@ export function FooterSection() {
         </div>
 
         {/* Trusted by */}
-        <div
-          style={{
-            borderTop:    '1px solid rgba(201,168,76,0.07)',
-            paddingTop:   28,
-            marginBottom: 28,
-          }}
-        >
+        <div style={{ borderTop: '1px solid rgba(201,168,76,0.07)', paddingTop: 28, marginBottom: 28 }}>
           <span
             style={{
               display:       'block',
@@ -615,7 +632,9 @@ export function FooterSection() {
             borderTop:      '1px solid rgba(201,168,76,0.07)',
           }}
         >
-          <span
+          <EditableText
+            path="footer.copyright"
+            as="span"
             style={{
               fontFamily:    'var(--font-body)',
               fontSize:      '0.42rem',
@@ -623,8 +642,8 @@ export function FooterSection() {
               color:         'rgba(201,168,76,0.18)',
             }}
           >
-            © 2026 Geosite DEVELOPERS. All Rights Reserved. Designed in Nairobi, Kenya.
-          </span>
+            {fc.copyright}
+          </EditableText>
           <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
             {['Terms & Support', 'Privacy Policy', 'Cookie Policy'].map(link => (
               <a
