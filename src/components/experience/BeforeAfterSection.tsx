@@ -1,60 +1,64 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-/* ─── Spaces data ────────────────────────────────────────────────
-   Single `image` URL is used for both sides.
-   The "before" side gets a wireframe/blueprint CSS treatment.
-   The "after" side shows the full photorealistic colour image.
+/* ─── Real before/after pairs from /public/renders/ ─────────────
+   Before = actual 3D model / Rhino / BIM wireframe screenshots
+   After  = photorealistic final render of the same space
 ──────────────────────────────────────────────────────────────── */
 const SPACES = [
   {
-    id:       'living-room',
-    label:    'Living Room',
-    location: 'Runda Estate, Nairobi',
-    image:    'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1800&q=88&auto=format&fit=crop',
-    quote:    'Geosite turned our concept into a living masterpiece.',
-    client:   'Amara K.',
+    id:       'nova-reception',
+    label:    'NOVA Atelier Reception',
+    location: 'Commercial Interior · Nairobi',
+    before:   '/renders/NOVA Atelica Reception rhino.png',
+    after:    '/renders/NOVA Atelica Reception render 1.png',
+    quote:    'The sinusoidal light wall was our boldest brief — Geosite delivered it flawlessly.',
+    client:   'NOVA Atelier',
   },
   {
-    id:       'hotel-suite',
-    label:    'Presidential Suite',
-    location: 'Westlands, Nairobi',
-    image:    'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1800&q=88&auto=format&fit=crop',
-    quote:    'The before/after is genuinely shocking. Beyond expectation.',
-    client:   'Chef M. Kariuki',
+    id:       'blue-spiral-tower',
+    label:    'Blue Spiral Tower',
+    location: 'Mixed-Use Development · Karen',
+    before:   '/renders/Blue Spiral Hotel Ground.jpg',
+    after:    '/renders/Blue Spiral Hotel Ground full render.png',
+    quote:    'From structural model to finished landmark — the process was seamless.',
+    client:   'Arch. Kariuki',
   },
   {
-    id:       'kitchen',
-    label:    'Kitchen & Dining',
-    location: 'Karen, Nairobi',
-    image:    'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1800&q=88&auto=format&fit=crop',
-    quote:    'From empty shell to culinary sanctuary — flawless execution.',
+    id:       'ade-living',
+    label:    'Ade Residence — Living Room',
+    location: 'Residential Interior · Runda',
+    before:   '/renders/Screenshot 2024-11-26 144316.png',
+    after:    '/renders/Ade Int_13 - Photo.jpg',
+    quote:    'They transformed our vision into a living, breathing space.',
+    client:   'Amara O.',
+  },
+  {
+    id:       'hotel-corridor',
+    label:    'Hotel Ground Floor',
+    location: 'Hospitality · Westlands',
+    before:   '/renders/Screenshot 2026-04-07 163957.png',
+    after:    '/renders/Blue Spiral Hotel Entrance Final.png',
+    quote:    'The BIM walkthrough gave us total confidence before a nail was hammered.',
     client:   'James & Wanjiru N.',
   },
   {
-    id:       'bathroom',
-    label:    'Spa Bathroom',
-    location: 'Muthaiga, Nairobi',
-    image:    'https://images.unsplash.com/photo-1552321554-cd347d2142a7?w=1800&q=88&auto=format&fit=crop',
-    quote:    'Every detail was considered. A true sanctuary.',
-    client:   'Fatuma H.',
-  },
-  {
-    id:       'library',
-    label:    'Home Library',
-    location: 'Gigiri, Nairobi',
-    image:    'https://images.unsplash.com/photo-1481277542470-5a2176ae8722?w=1800&q=88&auto=format&fit=crop',
-    quote:    'Our office now tells our brand story before anyone says a word.',
-    client:   'Arch. Kariuki',
+    id:       'presidential-suite',
+    label:    'Presidential Suite',
+    location: 'Luxury Suite · Westlands',
+    before:   '/renders/Screenshot 2026-04-15 162323.png',
+    after:    '/renders/Luxurious presidential suite Infinity feel 1.png',
+    quote:    'Geosite turned our concept sketch into a living masterpiece.',
+    client:   'Amara K.',
   },
 ];
 
-/* ─── Slider (same UX as before: follow-mouse, click-to-lock) ─── */
+/* ─── Slider ─────────────────────────────────────────────────── */
 function Slider({ space }: { space: (typeof SPACES)[0] }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [pct, setPct]       = useState(50);
-  const [locked, setLocked] = useState(false);
-  const lockedRef           = useRef(false);
+  const containerRef            = useRef<HTMLDivElement>(null);
+  const [pct, setPct]           = useState(50);
+  const [locked, setLocked]     = useState(false);
+  const lockedRef               = useRef(false);
 
   const getPercent = useCallback((clientX: number) => {
     if (!containerRef.current) return 50;
@@ -107,7 +111,7 @@ function Slider({ space }: { space: (typeof SPACES)[0] }) {
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onClick={handleClick}
-      onTouchStart={e => setPct(getPercent(e.touches[0].clientX))}
+      onTouchStart={e => { setPct(getPercent(e.touches[0].clientX)); }}
       style={{
         position:   'relative',
         width:      '100%',
@@ -118,46 +122,22 @@ function Slider({ space }: { space: (typeof SPACES)[0] }) {
         cursor:     locked ? 'col-resize' : 'crosshair',
       }}
     >
-      {/* ── BEFORE: same image with wireframe/blueprint CSS treatment ── */}
-      <div style={{ position: 'absolute', inset: 0 }}>
-        <img
-          src={space.image}
-          alt="Before — Concept State"
-          draggable={false}
-          style={{
-            width:      '100%',
-            height:     '100%',
-            objectFit:  'cover',
-            objectPosition: 'center',
-            filter:     'grayscale(1) brightness(1.55) contrast(0.62) opacity(0.88)',
-          }}
-        />
-        {/* Blueprint blue tint overlay */}
-        <div
-          style={{
-            position:   'absolute',
-            inset:      0,
-            background: 'rgba(16, 38, 80, 0.32)',
-            mixBlendMode: 'multiply',
-            pointerEvents: 'none',
-          }}
-        />
-        {/* Subtle grid lines for blueprint feel */}
-        <div
-          style={{
-            position:   'absolute',
-            inset:      0,
-            backgroundImage: `
-              linear-gradient(rgba(140,180,255,0.06) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(140,180,255,0.06) 1px, transparent 1px)
-            `,
-            backgroundSize: '48px 48px',
-            pointerEvents:  'none',
-          }}
-        />
-      </div>
+      {/* ── BEFORE: real 3D model / wireframe screenshot ── */}
+      <img
+        src={space.before}
+        alt="3D Model — Before"
+        draggable={false}
+        style={{
+          position:       'absolute',
+          inset:          0,
+          width:          '100%',
+          height:         '100%',
+          objectFit:      'cover',
+          objectPosition: 'center',
+        }}
+      />
 
-      {/* ── AFTER: full photorealistic colour image, clipped to right of divider ── */}
+      {/* ── AFTER: photorealistic render, clipped to left of divider ── */}
       <div
         style={{
           position: 'absolute',
@@ -167,18 +147,14 @@ function Slider({ space }: { space: (typeof SPACES)[0] }) {
         }}
       >
         <img
-          src={space.image}
-          alt="After — Photorealistic Render"
+          src={space.after}
+          alt="Photorealistic Render — After"
           draggable={false}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
-        />
-        {/* Subtle warm gloss to make "after" pop vs. ghosted before */}
-        <div
           style={{
-            position:   'absolute',
-            inset:      0,
-            background: 'linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 60%)',
-            pointerEvents: 'none',
+            width:          '100%',
+            height:         '100%',
+            objectFit:      'cover',
+            objectPosition: 'center',
           }}
         />
       </div>
@@ -194,16 +170,16 @@ function Slider({ space }: { space: (typeof SPACES)[0] }) {
           fontSize:       '0.48rem',
           letterSpacing:  '0.42em',
           textTransform:  'uppercase',
-          background:     'rgba(16,38,80,0.72)',
-          border:         '1px solid rgba(140,180,255,0.3)',
-          color:          'rgba(180,210,255,0.9)',
+          background:     'rgba(22,22,22,0.72)',
+          border:         '1px solid rgba(255,255,255,0.15)',
+          color:          'rgba(248,244,238,0.78)',
           backdropFilter: 'blur(8px)',
           opacity:        pct < 88 ? 1 : 0,
           transition:     'opacity 0.3s ease',
           pointerEvents:  'none',
         }}
       >
-        Concept
+        3D Model
       </div>
 
       {/* ── After label ── */}
@@ -226,7 +202,7 @@ function Slider({ space }: { space: (typeof SPACES)[0] }) {
           pointerEvents:  'none',
         }}
       >
-        Render
+        Final Render
       </div>
 
       {/* ── Lock indicator ── */}
@@ -347,15 +323,15 @@ export function BeforeAfterSection() {
         {/* ── Header ── */}
         <div
           style={{
-            display:    'flex',
-            flexWrap:   'wrap',
-            alignItems: 'flex-end',
+            display:        'flex',
+            flexWrap:       'wrap',
+            alignItems:     'flex-end',
             justifyContent: 'space-between',
-            gap:        32,
-            marginBottom: 40,
-            opacity:    revealed ? 1 : 0,
-            transform:  revealed ? 'translateY(0)' : 'translateY(24px)',
-            transition: 'opacity 0.9s ease, transform 0.9s ease',
+            gap:            32,
+            marginBottom:   40,
+            opacity:        revealed ? 1 : 0,
+            transform:      revealed ? 'translateY(0)' : 'translateY(24px)',
+            transition:     'opacity 0.9s ease, transform 0.9s ease',
           }}
         >
           <div>
@@ -375,21 +351,14 @@ export function BeforeAfterSection() {
                 lineHeight:    0.93,
               }}
             >
-              Concept to
+              Model to
               <br />
               <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>Reality</em>
             </h2>
           </div>
 
-          {/* Space counter + label */}
-          <div
-            style={{
-              display:       'flex',
-              flexDirection: 'column',
-              alignItems:    'flex-end',
-              gap:           6,
-            }}
-          >
+          {/* Space label + counter + pips */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.46rem', letterSpacing: '0.42em', textTransform: 'uppercase', color: '#B08422' }}>
               {space.location}
             </p>
@@ -430,19 +399,19 @@ export function BeforeAfterSection() {
           </div>
         </div>
 
-        {/* ── Slider container with edge arrow buttons ── */}
+        {/* ── Slider + edge arrows ── */}
         <div
           style={{
             position:   'relative',
-            opacity:    revealed ? (entering ? 0.6 : 1) : 0,
+            opacity:    revealed ? (entering ? 0.55 : 1) : 0,
             transform:  revealed ? 'translateY(0)' : 'translateY(32px)',
             transition: 'opacity 0.3s ease, transform 0.9s ease 0.18s',
           }}
         >
-          {/* LEFT edge arrow */}
+          {/* LEFT arrow */}
           <button
             onClick={goPrev}
-            aria-label="Previous space"
+            aria-label="Previous project"
             style={{
               position:       'absolute',
               left:           0,
@@ -452,7 +421,7 @@ export function BeforeAfterSection() {
               width:          52,
               height:         52,
               borderRadius:   '50%',
-              background:     'rgba(250,249,246,0.92)',
+              background:     'rgba(250,249,246,0.95)',
               border:         '1px solid rgba(176,132,34,0.25)',
               cursor:         'pointer',
               display:        'flex',
@@ -464,13 +433,13 @@ export function BeforeAfterSection() {
             }}
             onMouseEnter={e => {
               const el = e.currentTarget as HTMLElement;
-              el.style.background    = '#B08422';
-              el.style.borderColor   = '#B08422';
-              el.style.transform     = 'translateY(-50%) scale(1.08)';
+              el.style.background  = '#B08422';
+              el.style.borderColor = '#B08422';
+              el.style.transform   = 'translateY(-50%) scale(1.08)';
             }}
             onMouseLeave={e => {
               const el = e.currentTarget as HTMLElement;
-              el.style.background  = 'rgba(250,249,246,0.92)';
+              el.style.background  = 'rgba(250,249,246,0.95)';
               el.style.borderColor = 'rgba(176,132,34,0.25)';
               el.style.transform   = 'translateY(-50%)';
             }}
@@ -480,10 +449,10 @@ export function BeforeAfterSection() {
             </svg>
           </button>
 
-          {/* RIGHT edge arrow */}
+          {/* RIGHT arrow */}
           <button
             onClick={goNext}
-            aria-label="Next space"
+            aria-label="Next project"
             style={{
               position:       'absolute',
               right:          0,
@@ -493,7 +462,7 @@ export function BeforeAfterSection() {
               width:          52,
               height:         52,
               borderRadius:   '50%',
-              background:     'rgba(250,249,246,0.92)',
+              background:     'rgba(250,249,246,0.95)',
               border:         '1px solid rgba(176,132,34,0.25)',
               cursor:         'pointer',
               display:        'flex',
@@ -505,13 +474,13 @@ export function BeforeAfterSection() {
             }}
             onMouseEnter={e => {
               const el = e.currentTarget as HTMLElement;
-              el.style.background    = '#B08422';
-              el.style.borderColor   = '#B08422';
-              el.style.transform     = 'translateY(-50%) scale(1.08)';
+              el.style.background  = '#B08422';
+              el.style.borderColor = '#B08422';
+              el.style.transform   = 'translateY(-50%) scale(1.08)';
             }}
             onMouseLeave={e => {
               const el = e.currentTarget as HTMLElement;
-              el.style.background  = 'rgba(250,249,246,0.92)';
+              el.style.background  = 'rgba(250,249,246,0.95)';
               el.style.borderColor = 'rgba(176,132,34,0.25)';
               el.style.transform   = 'translateY(-50%)';
             }}
@@ -524,7 +493,7 @@ export function BeforeAfterSection() {
           <Slider key={space.id} space={space} />
         </div>
 
-        {/* ── Info + quote ── */}
+        {/* ── Info strip ── */}
         <div
           style={{
             display:        'flex',
@@ -537,40 +506,29 @@ export function BeforeAfterSection() {
             transition:     'opacity 0.9s ease 0.35s',
           }}
         >
-          {/* Legend */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          {/* Legend chips */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div
-                style={{
-                  width: 28, height: 16, borderRadius: 2,
-                  background: 'rgba(16,38,80,0.22)',
-                  border: '1px solid rgba(140,180,255,0.4)',
-                }}
-              />
+              <div style={{ width: 28, height: 16, borderRadius: 2, background: 'rgba(30,30,30,0.18)', border: '1px solid rgba(255,255,255,0.3)' }} />
               <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.38em', textTransform: 'uppercase', color: '#7A6E60' }}>
-                Concept State
+                3D Model
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div
-                style={{
-                  width: 28, height: 16, borderRadius: 2,
-                  background: 'rgba(201,168,76,0.2)',
-                  border: '1px solid rgba(201,168,76,0.5)',
-                }}
-              />
+              <div style={{ width: 28, height: 16, borderRadius: 2, background: 'rgba(201,168,76,0.18)', border: '1px solid rgba(201,168,76,0.5)' }} />
               <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.38em', textTransform: 'uppercase', color: '#7A6E60' }}>
                 Final Render
               </span>
             </div>
           </div>
 
+          {/* Quote */}
           <blockquote
             style={{
               borderRight:  '2px solid #B08422',
               paddingRight: 20,
               textAlign:    'right',
-              maxWidth:     380,
+              maxWidth:     400,
               opacity:      entering ? 0 : 1,
               transition:   'opacity 0.26s ease',
             }}
@@ -600,7 +558,7 @@ export function BeforeAfterSection() {
             <path d="M4 3.5 L1 7 L4 10.5 M10 3.5 L13 7 L10 10.5" stroke="#B08422" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.46rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: '#7A6E60' }}>
-            Move mouse to compare · Click to lock · Arrows to browse spaces
+            Drag to compare · Click to lock · Arrows to browse projects
           </span>
         </div>
       </div>
