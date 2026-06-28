@@ -10,21 +10,28 @@ import { TestimonialsSection } from '@/src/components/experience/TestimonialsSec
 import { ServicesSection }    from '@/src/components/experience/ServicesSection';
 import { PortfolioSection }   from '@/src/components/experience/PortfolioSection';
 import { FooterSection }      from '@/src/components/experience/FooterSection';
+import { AdminProvider }      from '@/src/contexts/AdminContext';
+import { AdminToolbar }       from '@/src/components/admin/AdminToolbar';
+import { LoginModal }         from '@/src/components/admin/LoginModal';
 
 export default function Home() {
   return (
-    <div className="relative" style={{ background: 'var(--charcoal)' }}>
-      <CustomCursor />
-      <NavBar />
-      <LandingSection />
-      <ProcessSection />
-      <BeforeAfterSection />
-      <SuiteSection />
-      <BIMSection />
-      <ServicesSection />
-      <TestimonialsSection />
-      <PortfolioSection />
-      <FooterSection />
-    </div>
+    <AdminProvider>
+      <div className="relative" style={{ background: 'var(--charcoal)' }}>
+        <CustomCursor />
+        <NavBar />
+        <LandingSection />
+        <ProcessSection />
+        <BeforeAfterSection />
+        <SuiteSection />
+        <BIMSection />
+        <ServicesSection />
+        <TestimonialsSection />
+        <PortfolioSection />
+        <FooterSection />
+      </div>
+      <AdminToolbar />
+      <LoginModal />
+    </AdminProvider>
   );
 }
