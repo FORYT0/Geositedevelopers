@@ -838,7 +838,7 @@ function SpatialScorePanel({
   onReset:    () => void;
 }) {
   const metrics: { key: keyof SIScores; label: string; icon: string; desc: string }[] = [
-    { key: 'light',   label: 'Natural Light',    icon: '◈', desc: 'How well north-facing daylight serves each room's needs' },
+    { key: 'light',   label: 'Natural Light',    icon: '◈', desc: "How well north-facing daylight serves each room's needs" },
     { key: 'privacy', label: 'Privacy',           icon: '◉', desc: 'Separation of private rooms from entry and social zones' },
     { key: 'flow',    label: 'Circulation Flow',  icon: '◐', desc: 'Efficiency of the paths between functionally linked rooms' },
     { key: 'quiet',   label: 'Acoustic Comfort',  icon: '◑', desc: 'Protection of sensitive rooms from noise sources' },
