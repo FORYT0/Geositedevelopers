@@ -79,6 +79,7 @@ const ROOMS = [
 /* ─── Phase Timeline Data ──────────────────────────────────── */
 const PHASES = [
   {
+    id: '01',
     number: '01',
     title:  'Discovery',
     weeks:  '1–2 weeks',
@@ -94,6 +95,7 @@ const PHASES = [
     milestone: 'Brief signed off',
   },
   {
+    id: '02',
     number: '02',
     title:  'Concept & Design',
     weeks:  '3–5 weeks',
@@ -109,6 +111,7 @@ const PHASES = [
     milestone: 'Concept approved',
   },
   {
+    id: '03',
     number: '03',
     title:  'BIM & Visualisation',
     weeks:  '3–4 weeks',
@@ -124,6 +127,7 @@ const PHASES = [
     milestone: 'Design frozen',
   },
   {
+    id: '04',
     number: '04',
     title:  'Procurement',
     weeks:  '4–8 weeks',
@@ -139,6 +143,7 @@ const PHASES = [
     milestone: 'All items on order',
   },
   {
+    id: '05',
     number: '05',
     title:  'Installation & Delivery',
     weeks:  '4–12 weeks',
