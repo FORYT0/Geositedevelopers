@@ -25,3 +25,4 @@ yarn-error.log*
 # Kiro
 .kiro/
 .vercel
+.env*.local
