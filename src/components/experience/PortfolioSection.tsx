@@ -6,6 +6,154 @@ import { EditableImage } from '@/src/components/admin/EditableImage';
 import { useMobile }     from '@/src/hooks/useMobile';
 import type { PortfolioItem } from '@/src/lib/site-content';
 
+/* ─── Gallery slideshow (expanded view, non-edit) ───────────── */
+function GallerySlideshow({ images, alt }: { images: string[]; alt: string }) {
+  const [current, setCurrent] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const n = images.length;
+
+  const resetInterval = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => setCurrent(i => (i + 1) % n), 6000);
+  }, [n]);
+
+  useEffect(() => {
+    resetInterval();
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [resetInterval]);
+
+  const go = (dir: number) => { setCurrent(i => (i + dir + n) % n); resetInterval(); };
+
+  return (
+    <div
+      style={{ position: 'relative', width: '100%', aspectRatio: '16/9', overflow: 'hidden', marginBottom: 56, background: '#111' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {images.map((img, i) => (
+        <img
+          key={i}
+          src={img}
+          alt={`${alt} — ${i + 1}`}
+          draggable={false}
+          style={{
+            position:       'absolute',
+            inset:          0,
+            width:          '100%',
+            height:         '100%',
+            objectFit:      'cover',
+            objectPosition: 'center',
+            opacity:        i === current ? 1 : 0,
+            transition:     'opacity 1.8s ease',
+          }}
+        />
+      ))}
+
+      {/* Prev arrow */}
+      <button
+        onClick={() => go(-1)}
+        aria-label="Previous"
+        style={{
+          position:       'absolute',
+          top:            '50%',
+          left:           16,
+          transform:      'translateY(-50%)',
+          width:          40,
+          height:         40,
+          borderRadius:   '50%',
+          background:     'rgba(8,8,6,0.6)',
+          backdropFilter: 'blur(8px)',
+          border:         '1px solid rgba(201,168,76,0.3)',
+          color:          '#C9A84C',
+          fontSize:       22,
+          cursor:         'pointer',
+          zIndex:         10,
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: 'center',
+          opacity:        hovered ? 1 : 0,
+          transition:     'opacity 0.3s ease',
+          padding:        '0',
+        }}
+      >‹</button>
+
+      {/* Next arrow */}
+      <button
+        onClick={() => go(1)}
+        aria-label="Next"
+        style={{
+          position:       'absolute',
+          top:            '50%',
+          right:          16,
+          transform:      'translateY(-50%)',
+          width:          40,
+          height:         40,
+          borderRadius:   '50%',
+          background:     'rgba(8,8,6,0.6)',
+          backdropFilter: 'blur(8px)',
+          border:         '1px solid rgba(201,168,76,0.3)',
+          color:          '#C9A84C',
+          fontSize:       22,
+          cursor:         'pointer',
+          zIndex:         10,
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: 'center',
+          opacity:        hovered ? 1 : 0,
+          transition:     'opacity 0.3s ease',
+          padding:        '0',
+        }}
+      >›</button>
+
+      {/* Dot indicators */}
+      <div
+        style={{
+          position:  'absolute',
+          bottom:    16,
+          left:      '50%',
+          transform: 'translateX(-50%)',
+          display:   'flex',
+          gap:       6,
+          zIndex:    10,
+        }}
+      >
+        {images.map((_, i) => (
+          <div
+            key={i}
+            onClick={() => { setCurrent(i); resetInterval(); }}
+            style={{
+              width:      i === current ? 16 : 6,
+              height:     6,
+              borderRadius: 3,
+              background: i === current ? '#C9A84C' : 'rgba(255,255,255,0.35)',
+              cursor:     'pointer',
+              transition: 'width 0.3s ease, background 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Counter overlay */}
+      <div style={{
+        position:       'absolute',
+        bottom:         16,
+        right:          16,
+        fontFamily:     'var(--font-body)',
+        fontSize:       '0.4rem',
+        letterSpacing:  '0.3em',
+        color:          'rgba(255,255,255,0.5)',
+        background:     'rgba(8,8,6,0.55)',
+        backdropFilter: 'blur(6px)',
+        padding:        '4px 10px',
+        borderRadius:   8,
+      }}>
+        {current + 1} / {n}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Layout constants ──────────────────────────────────────── */
 const COL_OFFSET   = [0, 60, 30, 80];
 const COL_ROTATION = [-0.45, 0.35, -0.3, 0.55];
@@ -181,7 +329,7 @@ function ExpandedView({
   isExpanded:    boolean;
   onClose:       () => void;
 }) {
-  const { isEditMode } = useAdmin();
+  const { isEditMode, updateField } = useAdmin();
   const [contentVisible, setContentVisible] = useState(false);
 
   useEffect(() => {
@@ -267,19 +415,72 @@ function ExpandedView({
             ))}
           </div>
 
-          {/* Gallery */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 56 }}>
-            {cat.gallery.map((img, gi) => (
-              <div key={gi} style={{ position: 'relative', overflow: 'hidden', aspectRatio: gi === 0 ? '16/10' : '4/3', gridColumn: gi === 0 ? '1 / span 2' : 'auto' }}>
-                <EditableImage
-                  path={`portfolio.categories.${originalIndex}.gallery.${gi}`}
-                  src={img}
-                  alt={`${cat.title} — ${gi + 1}`}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', transition: 'transform 0.6s ease' }}
-                />
+          {/* Gallery — slideshow in view mode, editable grid in edit mode */}
+          {isEditMode ? (
+            <div style={{ marginBottom: 56 }}>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.4rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 16 }}>
+                Gallery Slideshow Images
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 16 }}>
+                {cat.gallery.map((img, gi) => (
+                  <div key={gi} style={{ position: 'relative', overflow: 'hidden', aspectRatio: gi === 0 ? '16/10' : '4/3', gridColumn: gi === 0 ? '1 / span 2' : 'auto' }}>
+                    <EditableImage
+                      path={`portfolio.categories.${originalIndex}.gallery.${gi}`}
+                      src={img}
+                      alt={`${cat.title} — ${gi + 1}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+                    />
+                    {/* Remove gallery image */}
+                    <button
+                      onClick={() => {
+                        const next = cat.gallery.filter((_, j) => j !== gi);
+                        updateField(`portfolio.categories.${originalIndex}.gallery`, next);
+                      }}
+                      style={{
+                        position: 'absolute', top: 6, left: 6,
+                        width: 22, height: 22, borderRadius: '50%',
+                        background: 'rgba(200,50,50,0.82)', border: 'none',
+                        color: '#fff', fontSize: 13, fontWeight: 700,
+                        cursor: 'pointer', zIndex: 20,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '0',
+                      }}
+                      title="Remove from gallery"
+                    >×</button>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+              {/* Add gallery image */}
+              <button
+                onClick={() => {
+                  const url = window.prompt('Enter image URL to add to gallery:');
+                  if (url?.trim()) {
+                    updateField(`portfolio.categories.${originalIndex}.gallery`, [...cat.gallery, url.trim()]);
+                  }
+                }}
+                style={{
+                  display:       'inline-flex',
+                  alignItems:    'center',
+                  gap:           8,
+                  padding:       '10px 20px',
+                  background:    'transparent',
+                  border:        '1px dashed rgba(201,168,76,0.4)',
+                  color:         '#C9A84C',
+                  fontFamily:    'var(--font-body)',
+                  fontSize:      '0.4rem',
+                  letterSpacing: '0.4em',
+                  textTransform: 'uppercase',
+                  cursor:        'pointer',
+                }}
+              >
+                + Add Gallery Image
+              </button>
+            </div>
+          ) : (
+            cat.gallery.length > 0 && (
+              <GallerySlideshow images={cat.gallery} alt={cat.title} />
+            )
+          )}
 
           {/* CTA */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>

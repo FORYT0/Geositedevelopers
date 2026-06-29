@@ -21,7 +21,7 @@ export interface ServiceItem {
   subtitle:    string;
   description: string;
   features:    string[];
-  image:       string;
+  image:       string | string[];
   flip:        boolean;
 }
 
@@ -40,7 +40,7 @@ export interface SuiteElement {
   category:    string;
   description: string;
   material:    string;
-  image:       string;
+  image:       string | string[];
 }
 
 export interface SuiteContent {
@@ -56,7 +56,7 @@ export interface PortfolioItem {
   title:       string;
   subtitle:    string;
   type:        'Project' | 'Element';
-  image:       string;
+  image:       string | string[];
   count:       number;
   tags:        string[];
   description: string;
@@ -75,7 +75,7 @@ export interface ProcessStep {
   title:       string;
   subtitle:    string;
   description: string;
-  image:       string;
+  image:       string | string[];
 }
 
 export interface ProcessContent {

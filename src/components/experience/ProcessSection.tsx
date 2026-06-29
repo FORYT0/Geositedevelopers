@@ -356,7 +356,7 @@ export function ProcessSection() {
               {steps.map((step, i) => (
                 <img
                   key={i}
-                  src={step.image}
+                  src={Array.isArray(step.image) ? step.image[0] : step.image}
                   alt={step.title}
                   draggable={false}
                   style={{
