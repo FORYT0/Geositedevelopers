@@ -6,7 +6,7 @@ export function AdminToolbar() {
   const {
     isAdmin, isEditMode, toggleEditMode,
     pendingCount, isSaving, lastSaved,
-    saveChanges, discardChanges, logout, openLogin,
+    saveChanges, discardChanges, logout, openLogin, populateImages,
   } = useAdmin();
 
   const [visible,   setVisible]   = useState(false);
@@ -90,7 +90,7 @@ export function AdminToolbar() {
         borderRadius:'4px 4px 0 0',
         overflow:    'hidden',
         transition:  'bottom 0.5s cubic-bezier(0.16,1,0.3,1)',
-        minWidth:    520,
+        minWidth:    680,
       }}
     >
       {/* Gold top line */}
@@ -154,6 +154,23 @@ export function AdminToolbar() {
           </svg>
         }
         label="Discard"
+      />
+
+      {/* Separator */}
+      <div style={{ width: 1, height: 28, background: 'rgba(248,244,238,0.08)', flexShrink: 0 }} />
+
+      {/* Populate Images */}
+      <ToolbarBtn
+        onClick={populateImages}
+        icon={
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <rect x="1" y="3" width="12" height="9" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+            <circle cx="4.5" cy="6.5" r="1.2" stroke="currentColor" strokeWidth="1.1"/>
+            <path d="M1 10l3-3 2.5 2.5L9 7l4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9.5 1v3M8 2.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+        }
+        label="Populate Images"
       />
 
       {/* Separator */}

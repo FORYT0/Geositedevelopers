@@ -4,6 +4,7 @@ import {
   useEffect, useRef, useState,
 } from 'react';
 import { DEFAULT_CONTENT, SiteContent, deepMerge, setAtPath } from '@/src/lib/site-content';
+import { RICH_IMAGE_PRESET } from '@/src/lib/rich-images';
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface AdminContextType {
@@ -24,11 +25,12 @@ interface AdminContextType {
   updateField:   (path: string, value: unknown) => void;
   removeItem:    (listPath: string, index: number) => void;
   addItem:       (listPath: string, item: unknown) => void;
-  pendingCount:  number;
-  isSaving:      boolean;
-  lastSaved:     Date | null;
-  saveChanges:   () => Promise<void>;
-  discardChanges:() => void;
+  pendingCount:   number;
+  isSaving:       boolean;
+  lastSaved:      Date | null;
+  saveChanges:    () => Promise<void>;
+  discardChanges: () => void;
+  populateImages: () => void;
 }
 
 /* ─── Context ────────────────────────────────────────────────── */
@@ -164,6 +166,18 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     setPendingCount(0);
   }, [savedContent]);
 
+  /* ── Populate images (bulk-apply rich preset) ── */
+  const populateImages = useCallback(() => {
+    setContent(prev => {
+      let next = prev as unknown;
+      for (const [path, value] of Object.entries(RICH_IMAGE_PRESET)) {
+        next = setAtPath(next as SiteContent, path, value);
+      }
+      return next as SiteContent;
+    });
+    setPendingCount(n => n + Object.keys(RICH_IMAGE_PRESET).length);
+  }, []);
+
   return (
     <Ctx.Provider value={{
       isAdmin, showLogin,
@@ -173,7 +187,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       isEditMode, toggleEditMode,
       content, updateField, removeItem, addItem,
       pendingCount, isSaving, lastSaved,
-      saveChanges, discardChanges,
+      saveChanges, discardChanges, populateImages,
     }}>
       {children}
     </Ctx.Provider>
