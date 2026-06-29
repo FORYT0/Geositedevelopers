@@ -1102,6 +1102,7 @@ function OverviewTab({ barsPct }: { barsPct: boolean }) {
 
       {/* ── Floor plan ── */}
       <div>
+        {/* Header row — full width */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: '#C9A84C' }}>Floor Plan — Level 1</span>
@@ -1128,91 +1129,100 @@ function OverviewTab({ barsPct }: { barsPct: boolean }) {
           </div>
         </div>
 
-        {/* Legend */}
-        <div style={{ display: 'flex', gap: 20, marginBottom: 14, flexWrap: 'wrap' }}>
-          {[
-            { color: 'rgba(201,168,76,0.2)', label: 'Selected room' },
-            { color: 'rgba(201,168,76,0.08)', label: 'Interior space' },
-            { color: 'rgba(122,144,112,0.12)', label: 'Exterior / terrace' },
-            { color: 'rgba(248,244,238,0.25)', label: 'Windows' },
-          ].map(l => (
-            <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 14, height: 9, background: l.color, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 1 }} />
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.36rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.22)' }}>{l.label}</span>
+        {/* 2-column: left = plan, right = detail / score panel */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,3fr) minmax(280px,2fr)', gap: 20, alignItems: 'start' }}>
+
+          {/* ── LEFT: legend + instruction + SVG ── */}
+          <div>
+            {/* Legend */}
+            <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
+              {[
+                { color: 'rgba(201,168,76,0.22)', label: 'Selected' },
+                { color: 'rgba(201,168,76,0.08)', label: 'Interior' },
+                { color: 'rgba(122,144,112,0.12)', label: 'Terrace' },
+                { color: 'rgba(248,244,238,0.25)', label: 'Windows' },
+              ].map(l => (
+                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 12, height: 8, background: l.color, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 1 }} />
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.34rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.22)' }}>{l.label}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Rearrange mode instruction banner */}
-        {rearrangeMode && (
-          <div style={{ marginBottom: 10, padding: '10px 16px', background: 'rgba(201,168,76,0.07)', border: '1px solid rgba(201,168,76,0.18)', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 14, color: '#C9A84C' }}>↔</span>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'rgba(248,244,238,0.45)', lineHeight: 1.5 }}>
-              {swapSource
-                ? `${getSIRoom(assignment[swapSource]).label} selected — click another room to swap positions`
-                : 'Click any highlighted room to select it, then click a second room to swap. Scores update instantly.'}
-            </span>
-            {swapSource && (
-              <button onClick={() => setSwapSource(null)}
-                style={{ marginLeft: 'auto', padding: '4px 10px', background: 'transparent', border: '1px solid rgba(248,244,238,0.15)', color: 'rgba(248,244,238,0.4)', fontFamily: 'var(--font-body)', fontSize: '0.34rem', letterSpacing: '0.25em', cursor: 'pointer', flexShrink: 0 }}>
-                Cancel
-              </button>
+            {/* Rearrange mode instruction banner */}
+            {rearrangeMode && (
+              <div style={{ marginBottom: 8, padding: '8px 14px', background: 'rgba(201,168,76,0.07)', border: '1px solid rgba(201,168,76,0.18)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 13, color: '#C9A84C', flexShrink: 0 }}>↔</span>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'rgba(248,244,238,0.45)', lineHeight: 1.45 }}>
+                  {swapSource
+                    ? `${getSIRoom(assignment[swapSource]).label} selected — click another room to swap`
+                    : 'Click a highlighted room to select, then click another to swap. Scores update instantly.'}
+                </span>
+                {swapSource && (
+                  <button onClick={() => setSwapSource(null)}
+                    style={{ marginLeft: 'auto', padding: '3px 9px', background: 'transparent', border: '1px solid rgba(248,244,238,0.15)', color: 'rgba(248,244,238,0.4)', fontFamily: 'var(--font-body)', fontSize: '0.32rem', letterSpacing: '0.22em', cursor: 'pointer', flexShrink: 0 }}>
+                    Cancel
+                  </button>
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        <div style={{ background: 'rgba(10,9,8,0.6)', border: `1px solid ${rearrangeMode ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.08)'}`, padding: '8px 8px 4px' }}>
-          <FloorPlan
-            activeRoom={activeRoom}
-            setActiveRoom={setActiveRoom}
-            rearrangeMode={rearrangeMode}
-            assignment={assignment}
-            swapSource={swapSource}
-            onSlotClick={handleSlotClick}
-          />
-        </div>
+            {/* SVG container — constrained so whole plan is visible */}
+            <div style={{ background: 'rgba(10,9,8,0.6)', border: `1px solid ${rearrangeMode ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.08)'}`, padding: '6px 6px 3px', lineHeight: 0 }}>
+              <FloorPlan
+                activeRoom={activeRoom}
+                setActiveRoom={setActiveRoom}
+                rearrangeMode={rearrangeMode}
+                assignment={assignment}
+                swapSource={swapSource}
+                onSlotClick={handleSlotClick}
+              />
+            </div>
 
-        {/* Room selector strip (inspect mode only) */}
-        {!rearrangeMode && (
-          <>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-              {FP_ROOMS.map(r => (
-                <button
-                  key={r.id}
-                  onClick={() => setActiveRoom(activeRoom === r.id ? null : r.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '5px 10px',
-                    background: activeRoom === r.id ? 'rgba(201,168,76,0.12)' : 'transparent',
-                    border: activeRoom === r.id ? '1px solid rgba(201,168,76,0.4)' : '1px solid rgba(248,244,238,0.07)',
-                    cursor: 'pointer', transition: 'all 0.2s ease',
-                  }}>
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.35rem', letterSpacing: '0.15em', color: activeRoom === r.id ? '#C9A84C' : 'rgba(248,244,238,0.3)' }}>{r.badge}</span>
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.4rem', letterSpacing: '0.15em', color: activeRoom === r.id ? '#F8F4EE' : 'rgba(248,244,238,0.4)' }}>{r.label}</span>
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.38rem', color: 'rgba(248,244,238,0.2)' }}>{r.sqm}m²</span>
+            {/* Room selector strip (inspect mode only) */}
+            {!rearrangeMode && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
+                {FP_ROOMS.map(r => (
+                  <button
+                    key={r.id}
+                    onClick={() => setActiveRoom(activeRoom === r.id ? null : r.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '4px 9px',
+                      background: activeRoom === r.id ? 'rgba(201,168,76,0.12)' : 'transparent',
+                      border: activeRoom === r.id ? '1px solid rgba(201,168,76,0.4)' : '1px solid rgba(248,244,238,0.07)',
+                      cursor: 'pointer', transition: 'all 0.2s ease',
+                    }}>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.33rem', letterSpacing: '0.12em', color: activeRoom === r.id ? '#C9A84C' : 'rgba(248,244,238,0.3)' }}>{r.badge}</span>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.36rem', letterSpacing: '0.12em', color: activeRoom === r.id ? '#F8F4EE' : 'rgba(248,244,238,0.38)' }}>{r.label}</span>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.34rem', color: 'rgba(248,244,238,0.18)' }}>{r.sqm}m²</span>
                 </button>
               ))}
             </div>
-            <div style={{ marginTop: 12 }}>
-              <RoomDetailPanel room={room} />
-            </div>
-          </>
-        )}
+            )}
+          </div>{/* end left column */}
 
-        {/* Spatial score panel (rearrange mode only) */}
-        {rearrangeMode && (
-          <div style={{ marginTop: 12, border: '1px solid rgba(201,168,76,0.12)', background: 'rgba(10,9,8,0.4)' }}>
-            <SpatialScorePanel
-              scores={scores}
-              prevScores={prevScores}
-              feedback={feedback}
-              assignment={assignment}
-              swapSource={swapSource}
-              onReset={handleReset}
-            />
-          </div>
-        )}
-      </div>
+          {/* ── RIGHT: detail or score panel ── */}
+          <div style={{ position: 'sticky', top: 100 }}>
+            {!rearrangeMode && (
+              <RoomDetailPanel room={room} />
+            )}
+            {rearrangeMode && (
+              <div style={{ border: '1px solid rgba(201,168,76,0.12)', background: 'rgba(10,9,8,0.4)' }}>
+                <SpatialScorePanel
+                  scores={scores}
+                  prevScores={prevScores}
+                  feedback={feedback}
+                  assignment={assignment}
+                  swapSource={swapSource}
+                  onReset={handleReset}
+                />
+              </div>
+            )}
+          </div>{/* end right column */}
+
+        </div>{/* end 2-col grid */}
+      </div>{/* end floor plan section */}
 
       {/* ── Stats grid ── */}
       <div>
