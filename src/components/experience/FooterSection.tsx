@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { useAdmin } from '@/src/contexts/AdminContext';
-import { EditableText } from '@/src/components/admin/EditableText';
+import { useAdmin }      from '@/src/contexts/AdminContext';
+import { EditableText }  from '@/src/components/admin/EditableText';
 import { EditableImage } from '@/src/components/admin/EditableImage';
+import { useMobile }     from '@/src/hooks/useMobile';
 
 /* ─── Static link groups (labels editable via EditableText) ── */
 const FOOTER_LINK_GROUPS = ['Studio', 'Explore', 'Services'] as const;
@@ -59,6 +60,7 @@ function FooterLink({ label }: { label: string }) {
 export function FooterSection() {
   const [email,     setEmail]     = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const isMobile = useMobile();
   const { isAdmin, openLogin, toggleEditMode, isEditMode, content } = useAdmin();
 
   const fc = content.footer;
@@ -101,11 +103,11 @@ export function FooterSection() {
             zIndex:         10,
             maxWidth:       1400,
             margin:         '0 auto',
-            padding:        'clamp(80px, 10vw, 120px) clamp(32px, 5vw, 80px)',
+            padding:        'clamp(56px, 10vw, 120px) clamp(24px, 5vw, 80px)',
             display:        'flex',
             alignItems:     'flex-start',
             justifyContent: 'space-between',
-            gap:            64,
+            gap:            isMobile ? 36 : 64,
             flexWrap:       'wrap',
           }}
         >
@@ -224,7 +226,8 @@ export function FooterSection() {
               display:       'flex',
               flexDirection: 'column',
               gap:           22,
-              minWidth:      260,
+              minWidth:      isMobile ? 0 : 260,
+              width:         isMobile ? '100%' : undefined,
               flexShrink:    0,
             }}
           >
@@ -368,8 +371,8 @@ export function FooterSection() {
         <div
           style={{
             display:             'grid',
-            gridTemplateColumns: '2fr 1fr 1fr 1fr',
-            gap:                 'clamp(40px, 5vw, 80px)',
+            gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr 1fr',
+            gap:                 isMobile ? 40 : 'clamp(40px, 5vw, 80px)',
             marginBottom:        'clamp(48px, 6vw, 72px)',
             alignItems:          'start',
           }}

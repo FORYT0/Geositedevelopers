@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAdmin } from '@/src/contexts/AdminContext';
 import { EditableText } from '@/src/components/admin/EditableText';
+import { useMobile }    from '@/src/hooks/useMobile';
 
 /* ─── Tab IDs ─────────────────────────────────────────────── */
 type TabId = 'overview' | 'estimator' | 'timeline';
@@ -837,6 +838,7 @@ function SpatialScorePanel({
   swapSource: string | null;
   onReset:    () => void;
 }) {
+  const isMobile = useMobile();
   const metrics: { key: keyof SIScores; label: string; icon: string; desc: string }[] = [
     { key: 'light',   label: 'Natural Light',    icon: '◈', desc: "How well north-facing daylight serves each room's needs" },
     { key: 'privacy', label: 'Privacy',           icon: '◉', desc: 'Separation of private rooms from entry and social zones' },
@@ -850,7 +852,7 @@ function SpatialScorePanel({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
       {/* Header + overall score */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', background: 'rgba(201,168,76,0.06)', borderBottom: '1px solid rgba(201,168,76,0.1)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '16px 18px', background: 'rgba(201,168,76,0.06)', borderBottom: '1px solid rgba(201,168,76,0.1)', flexWrap: 'wrap', gap: 10 }}>
         <div>
           <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.38rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.55)', marginBottom: 4 }}>
             Spatial Intelligence Score
@@ -887,7 +889,7 @@ function SpatialScorePanel({
 
       {/* Metric bars */}
       <div style={{ padding: '18px 22px 14px', borderBottom: '1px solid rgba(201,168,76,0.08)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '12px' : '14px 32px' }}>
           {metrics.map(m => {
             const val  = scores[m.key];
             const prev = prevScores ? prevScores[m.key] : null;
@@ -923,7 +925,7 @@ function SpatialScorePanel({
         <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.36rem', letterSpacing: '0.42em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.4)', marginBottom: 10 }}>
           Current Assignment
         </span>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)', gap: 4 }}>
           {SI_SLOTS.map(slot => {
             const room = getSIRoom(assignment[slot.id]);
             const isSelected = swapSource === slot.id;
@@ -1053,6 +1055,7 @@ function RoomDetailPanel({ room }: { room: FPRoom | null }) {
 /* ── Overview tab ── */
 function OverviewTab({ barsPct }: { barsPct: boolean }) {
   const { content, isEditMode, removeItem, addItem } = useAdmin(); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const isMobile  = useMobile();
   const stats     = content.bim.stats;
   const materials = content.bim.materials;
 
@@ -1130,7 +1133,7 @@ function OverviewTab({ barsPct }: { barsPct: boolean }) {
         </div>
 
         {/* 2-column: left = plan, right = detail / score panel */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,3fr) minmax(280px,2fr)', gap: 20, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,3fr) minmax(280px,2fr)', gap: 20, alignItems: 'start' }}>
 
           {/* ── LEFT: legend + instruction + SVG ── */}
           <div>
@@ -1229,7 +1232,7 @@ function OverviewTab({ barsPct }: { barsPct: boolean }) {
         <h4 style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.5em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 'clamp(16px, 2vw, 24px)' }}>
           Project Intelligence
         </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'rgba(248,244,238,0.05)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 1, background: 'rgba(248,244,238,0.05)' }}>
           {stats.map((stat, i) => (
             <div key={i} style={{ background: '#0A0908', padding: 'clamp(16px, 2vw, 24px)', position: 'relative' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 5 }}>
@@ -1268,7 +1271,7 @@ function OverviewTab({ barsPct }: { barsPct: boolean }) {
         <h4 style={{ fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.5em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 'clamp(24px, 3vw, 36px)' }}>
           Material Specification
         </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px 48px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '20px' : '24px 48px' }}>
           {materials.map((m, i) => (
             <div key={i}>
               <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 8, gap: 12 }}>
@@ -1309,6 +1312,7 @@ function OverviewTab({ barsPct }: { barsPct: boolean }) {
 
 /* ── Estimator tab ── */
 function EstimatorTab() {
+  const isMobile   = useMobile();
   const [propertyType, setPropertyType] = useState<PropertyType>('apartment');
   const [sqm,          setSqm]          = useState(150);
   const [finish,       setFinish]       = useState<FinishLevel>('premium');
@@ -1353,7 +1357,7 @@ function EstimatorTab() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(32px, 5vw, 64px)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 'clamp(32px, 5vw, 64px)' }}>
 
         {/* ── Left: Inputs ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
@@ -1363,7 +1367,7 @@ function EstimatorTab() {
             <label style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.42rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 16 }}>
               Property Type
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)', gap: 8 }}>
               {PROPERTY_TYPES.map(pt => (
                 <button key={pt.id} onClick={() => setPropertyType(pt.id)}
                   style={{

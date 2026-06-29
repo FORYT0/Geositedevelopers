@@ -3,20 +3,22 @@ import { useEffect, useRef, useState } from 'react';
 import { useAdmin }      from '@/src/contexts/AdminContext';
 import { EditableText }  from '@/src/components/admin/EditableText';
 import { EditableImage } from '@/src/components/admin/EditableImage';
+import { useMobile }     from '@/src/hooks/useMobile';
 import type { ServiceItem } from '@/src/lib/site-content';
 
 /* ─── Service row ───────────────────────────────────────────── */
 function ServiceRow({ service, revealed, index }: { service: ServiceItem; revealed: boolean; index: number }) {
   const { isEditMode, updateField, removeItem } = useAdmin();
+  const isMobile = useMobile();
   const [hovered, setHovered] = useState(false);
   const delay = 0.1 + index * 0.08;
 
   return (
     <div
-      style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, minHeight: '540px', opacity: revealed ? 1 : 0, transform: revealed ? 'translateY(0)' : 'translateY(40px)', transition: `opacity 0.9s ease ${delay}s, transform 0.9s ease ${delay}s`, position: 'relative' }}
+      style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 0, minHeight: isMobile ? 'auto' : '540px', opacity: revealed ? 1 : 0, transform: revealed ? 'translateY(0)' : 'translateY(40px)', transition: `opacity 0.9s ease ${delay}s, transform 0.9s ease ${delay}s`, position: 'relative' }}
     >
       {/* Photo panel */}
-      <div style={{ order: service.flip ? 2 : 1, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ order: isMobile ? 1 : service.flip ? 2 : 1, position: 'relative', overflow: 'hidden', minHeight: isMobile ? '56vw' : undefined }}>
         <EditableImage
           path={`services.items.${index}.image`}
           src={service.image}
@@ -33,7 +35,7 @@ function ServiceRow({ service, revealed, index }: { service: ServiceItem; reveal
 
       {/* Content panel */}
       <div
-        style={{ order: service.flip ? 1 : 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'clamp(48px, 6vw, 96px) clamp(32px, 5vw, 72px)', background: '#0A0908', position: 'relative' }}
+        style={{ order: isMobile ? 2 : service.flip ? 1 : 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '32px 24px 40px' : 'clamp(48px, 6vw, 96px) clamp(32px, 5vw, 72px)', background: '#0A0908', position: 'relative' }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >

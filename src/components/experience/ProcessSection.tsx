@@ -3,11 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useAdmin } from '@/src/contexts/AdminContext';
 import { EditableText } from '@/src/components/admin/EditableText';
 import { EditableImage } from '@/src/components/admin/EditableImage';
+import { useMobile }    from '@/src/hooks/useMobile';
 
 export function ProcessSection() {
   const [active,   setActive]   = useState(0);
   const [revealed, setRevealed] = useState(false);
   const sectionRef              = useRef<HTMLElement>(null);
+  const isMobile                = useMobile();
   const { isEditMode, content, removeItem, addItem } = useAdmin();
 
   const steps = content.process.steps;
@@ -96,8 +98,8 @@ export function ProcessSection() {
         <div
           style={{
             display:             'grid',
-            gridTemplateColumns: isEditMode ? '1fr' : '1fr 1fr',
-            gap:                 80,
+            gridTemplateColumns: (isEditMode || isMobile) ? '1fr' : '1fr 1fr',
+            gap:                 isMobile ? 40 : 80,
             alignItems:          'start',
           }}
         >
@@ -339,8 +341,8 @@ export function ProcessSection() {
             )}
           </div>
 
-          {/* ── Right: sticky image panel (view mode only) ─────────────── */}
-          {!isEditMode && (
+          {/* ── Right: sticky image panel (desktop + view mode only) ───── */}
+          {!isEditMode && !isMobile && (
             <div
               style={{
                 position:   'sticky',

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAdmin }      from '@/src/contexts/AdminContext';
 import { EditableText }  from '@/src/components/admin/EditableText';
 import { EditableImage } from '@/src/components/admin/EditableImage';
+import { useMobile }     from '@/src/hooks/useMobile';
 
 /* ─── SVG icons (unchanged) ─────────────────────────────────── */
 const HOTSPOT_ICONS: Record<string, React.ReactElement> = {
@@ -63,6 +64,7 @@ export function SuiteSection() {
   const sectionRef               = useRef<HTMLElement>(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const [revealed,  setRevealed]  = useState(false);
+  const isMobile                  = useMobile();
 
   useEffect(() => {
     const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setRevealed(true); }, { threshold: 0.05 });
@@ -96,10 +98,10 @@ export function SuiteSection() {
       </div>
 
       {/* ── 2-column grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '55% 45%', minHeight: '82vh', marginTop: 40 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '55% 45%', minHeight: isMobile ? 'auto' : '82vh', marginTop: 40 }}>
 
         {/* Left: image cross-fade */}
-        <div style={{ position: 'relative', overflow: 'hidden', minHeight: 520 }}>
+        <div style={{ position: 'relative', overflow: 'hidden', minHeight: isMobile ? '60vw' : 520 }}>
           {elements.map((el, i) => (
             <div key={el.id} style={{ position: 'absolute', inset: 0, opacity: i === activeIdx ? 1 : 0, transition: 'opacity 0.75s ease' }}>
               <EditableImage
@@ -134,7 +136,7 @@ export function SuiteSection() {
         </div>
 
         {/* Right: element list */}
-        <div style={{ background: '#080806', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'clamp(48px, 5vw, 72px) clamp(32px, 4vw, 60px)', borderLeft: '1px solid rgba(248,244,238,0.04)' }}>
+        <div style={{ background: '#080806', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '32px 24px' : 'clamp(48px, 5vw, 72px) clamp(32px, 4vw, 60px)', borderLeft: isMobile ? 'none' : '1px solid rgba(248,244,238,0.04)', borderTop: isMobile ? '1px solid rgba(248,244,238,0.04)' : 'none' }}>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.44rem', letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(248,244,238,0.2)', marginBottom: 32, opacity: revealed ? 1 : 0, transition: 'opacity 0.6s ease' }}>
             {isEditMode ? 'Click text to edit · Click images to replace' : 'Hover to explore'}
           </p>

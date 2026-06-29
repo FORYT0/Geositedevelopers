@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAdmin }      from '@/src/contexts/AdminContext';
 import { EditableText }  from '@/src/components/admin/EditableText';
 import { EditableImage } from '@/src/components/admin/EditableImage';
+import { useMobile }     from '@/src/hooks/useMobile';
 import type { PortfolioItem } from '@/src/lib/site-content';
 
 /* ─── Layout constants ──────────────────────────────────────── */
@@ -299,6 +300,7 @@ export function PortfolioSection() {
   const { sectionEyebrow, categories }   = content.portfolio;
 
   const sectionRef = useRef<HTMLElement>(null);
+  const isMobile   = useMobile();
   const [revealed,   setRevealed]   = useState(false);
   const [filter,     setFilter]     = useState<'All' | 'Project' | 'Element'>('All');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -381,7 +383,7 @@ export function PortfolioSection() {
 
       {/* ── 4-col grid ── */}
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 clamp(32px, 5vw, 80px) clamp(80px, 10vw, 120px)', opacity: revealed ? 1 : 0, transform: revealed ? 'none' : 'translateY(40px)', transition: 'opacity 0.9s ease 0.2s, transform 0.9s ease 0.2s' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', columnGap: 16, rowGap: 0 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', columnGap: isMobile ? 10 : 16, rowGap: 0 }}>
           {filtered.map((cat, i) => {
             const originalIndex = categories.findIndex(c => c.id === cat.id);
             return (
